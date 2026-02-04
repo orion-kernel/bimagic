@@ -34,6 +34,7 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 - 🌐 Git graph (pretty git log) viewer
 - 🔀 Merge branches with conflict detection
 - ⏪ Revert commit(s) with multi-select
+- ⏳ Time Turner (Undo last commit)
 - 🗃️ Stash operations (Push, Pop, List, Apply, Drop, Clear)
 
 ## Installation
@@ -206,6 +207,10 @@ You can also use flags to perform specific actions immediately:
   ```bash
   bimagic -g
   ```
+- **The Time Turner** (Undo last commit):
+  ```bash
+  bimagic -u
+  ```
 
 You'll be presented with an interactive menu where you can choose from various Git operations.
 
@@ -326,6 +331,25 @@ Merge another branch into your current branch using an interactive selector. If 
 2. Confirm the action (y/N)
 3. Reverts run with `git revert --no-edit`
 4. On conflict, resolve then run `git revert --continue`
+
+### Time Turner (Undo)
+
+This feature is essentially an "Undo Button" for Git. It allows you to undo the last commit with three levels of severity:
+
+#### 1. Soft Undo
+Cancels the commit but leaves your files **staged**. Best for fixing typos or adding forgotten files.
+- **Scenario:** You committed "Added login" but forgot `login.css`.
+- **Result:** Files are green (staged), ready to commit again.
+
+#### 2. Mixed Undo
+Cancels the commit and **unstages** the files. Best for when you want to split work into multiple commits.
+- **Scenario:** You committed backend and frontend work together but want to separate them.
+- **Result:** Files are red (modified), keeping your work but not staged.
+
+#### 3. Hard Undo
+**Destroys** the commit and all changes. Reverts to the previous state.
+- **Scenario:** You want to trash the last commit completely.
+- **Result:** Everything from that commit is gone forever. **Use with caution!**
 
 ### Stash operations (Option 16)
 

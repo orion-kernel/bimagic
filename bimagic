@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="v1.2.1"
+VERSION="v1.3.0"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
   echo "Bimagic Git Wizard $VERSION"
@@ -132,7 +132,7 @@ setup_remote() {
   if gum confirm "Set remote '$remote_name' to $remote_url?"; then
     git remote remove "$remote_name" 2>/dev/null
     git remote add "$remote_name" "$remote_url"
-    print_status "🔗 Remote '$remote_name' set to $remote_url"
+    print_status " Remote '$remote_name' set to $remote_url"
     return 0
   else
     print_status "Operation cancelled."
@@ -517,6 +517,10 @@ while [[ $# -gt 0 ]]; do
     CLI_MODE="status"
     shift
     ;;
+  -u)
+    CLI_MODE="undo"
+    shift
+    ;;
   -g)
     CLI_MODE="graph"
     shift
@@ -555,6 +559,68 @@ if [[ "$CLI_MODE" == "graph" ]]; then
     exit 1
   fi
   pretty_git_log
+  exit 0
+fi
+
+# Mode: Time Turner (Undo)
+if [[ "$CLI_MODE" == "undo" ]]; then
+  print_status "󱦟 Spinning the Time Turner..."
+
+  # Check if there is a commit to undo
+  if ! git rev-parse HEAD >/dev/null 2>&1; then
+    print_error "No commits to undo! This repo is empty."
+    exit 1
+  fi
+
+  # Check if we are on the initial commit (no parent)
+  is_initial_commit=false
+  if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
+    is_initial_commit=true
+  fi
+
+  # Ask user for the type of undo
+  undo_type=$(gum choose --header "Select Undo Level:" \
+    "Soft (Undo commit, keep changes staged - Best for fixing typos)" \
+    "Mixed (Undo commit, keep changes unstaged - Best for splitting work)" \
+    "Hard (DESTROY changes - Revert to previous state)" \
+    "Cancel")
+
+  case "$undo_type" in
+  "Soft"*)
+    if [[ "$is_initial_commit" == "true" ]]; then
+      git update-ref -d HEAD
+    else
+      git reset --soft HEAD~1
+    fi
+    print_status "✨ Success! I undid the commit, but kept your files ready to commit again."
+    ;;
+  "Mixed"*)
+    if [[ "$is_initial_commit" == "true" ]]; then
+      git update-ref -d HEAD
+      git rm --cached -r -q .
+    else
+      git reset HEAD~1
+    fi
+    print_status "󱞈 Success! I undid the commit and unstaged the files."
+    ;;
+  "Hard"*)
+    if gum confirm " DANGER: This deletes your work forever. Are you sure?"; then
+      if [[ "$is_initial_commit" == "true" ]]; then
+        git update-ref -d HEAD
+        git clean -fd
+        git rm --cached -r -q . >/dev/null 2>&1
+      else
+        git reset --hard HEAD~1
+      fi
+      print_status "󱠇 Obliviate! The last commit and its changes are destroyed."
+    else
+      print_status "Operation cancelled."
+    fi
+    ;;
+  *)
+    print_status "Mischief managed (Cancelled)."
+    ;;
+  esac
   exit 0
 fi
 
