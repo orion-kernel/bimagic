@@ -6,6 +6,9 @@ echo "==================="
 
 # Determine installation locations
 TARGET_DIRS=("$HOME/bin" "/usr/local/bin")
+if [ -n "$PREFIX" ]; then
+    TARGET_DIRS=("$PREFIX/bin" "${TARGET_DIRS[@]}")
+fi
 FOUND_INSTALLS=()
 
 # Check where bimagic is installed
@@ -32,7 +35,8 @@ fi
 for dir in "${FOUND_INSTALLS[@]}"; do
     echo "Removing Bimagic from $dir..."
     
-    if [[ "$dir" == "/usr/local/bin" ]]; then
+    # Use sudo if it's /usr/local/bin and NOT in Termux
+    if [[ "$dir" == "/usr/local/bin" && -z "$TERMUX_VERSION" ]]; then
         # Need sudo for system directory
         if sudo rm -f "$dir/bimagic" "$dir/wz"; then
             echo "✓ Successfully removed from $dir"
@@ -40,7 +44,7 @@ for dir in "${FOUND_INSTALLS[@]}"; do
             echo "✗ Failed to remove from $dir (permission issue?)"
         fi
     else
-        # User directory, no sudo needed
+        # User directory or Termux, no sudo needed/available
         if rm -f "$dir/bimagic" "$dir/wz"; then
             echo "✓ Successfully removed from $dir"
         else
@@ -72,61 +76,76 @@ if [[ $remove_vars =~ ^[Yy]$ ]]; then
     done
 fi
 
-# Optional: Remove fzf if it was installed for Bimagic
-if command -v fzf &> /dev/null; then
+# Optional: Remove gum if it was installed for Bimagic
+if command -v gum &> /dev/null; then
     echo ""
-    echo "fzf is currently installed on your system."
-    read -p "Do you want to remove fzf as well? (y/N): " -r remove_fzf < /dev/tty
-    if [[ $remove_fzf =~ ^[Yy]$ ]]; then
-        echo "Attempting to remove fzf..."
+    echo "gum is currently installed on your system."
+    read -p "Do you want to remove gum as well? (y/N): " -r remove_gum < /dev/tty
+    if [[ $remove_gum =~ ^[Yy]$ ]]; then
+        echo "Attempting to remove gum..."
         
         # Try different package managers
-        if command -v apt &> /dev/null; then
-            echo "Detected apt package manager"
-            if sudo apt remove -y fzf 2>/dev/null; then
-                echo "✓ Successfully removed fzf via apt"
+        if [ -n "$TERMUX_VERSION" ] && command -v pkg &> /dev/null; then
+            echo "Detected Termux - Removing gum via pkg..."
+            if pkg uninstall -y gum; then
+                echo "✓ Successfully removed gum via pkg"
             else
-                echo "✗ Failed to remove fzf via apt (may not be installed via package manager)"
+                echo "✗ Failed to remove gum via pkg"
+            fi
+        elif command -v apt &> /dev/null; then
+            echo "Detected apt package manager"
+            if sudo apt remove -y gum 2>/dev/null; then
+                echo "✓ Successfully removed gum via apt"
+            else
+                echo "✗ Failed to remove gum via apt"
             fi
         elif command -v dnf &> /dev/null; then
             echo "Detected dnf package manager"
-            if sudo dnf remove -y fzf 2>/dev/null; then
-                echo "✓ Successfully removed fzf via dnf"
+            if sudo dnf remove -y gum 2>/dev/null; then
+                echo "✓ Successfully removed gum via dnf"
             else
-                echo "✗ Failed to remove fzf via dnf (may not be installed via package manager)"
+                echo "✗ Failed to remove gum via dnf"
             fi
         elif command -v yum &> /dev/null; then
             echo "Detected yum package manager"
-            if sudo yum remove -y fzf 2>/dev/null; then
-                echo "✓ Successfully removed fzf via yum"
+            if sudo yum remove -y gum 2>/dev/null; then
+                echo "✓ Successfully removed gum via yum"
             else
-                echo "✗ Failed to remove fzf via yum (may not be installed via package manager)"
+                echo "✗ Failed to remove gum via yum"
             fi
         elif command -v brew &> /dev/null; then
             echo "Detected Homebrew package manager"
-            if brew uninstall fzf 2>/dev/null; then
-                echo "✓ Successfully removed fzf via Homebrew"
+            if brew uninstall gum 2>/dev/null; then
+                echo "✓ Successfully removed gum via Homebrew"
             else
-                echo "✗ Failed to remove fzf via Homebrew (may not be installed via Homebrew)"
+                echo "✗ Failed to remove gum via Homebrew"
             fi
         elif command -v pacman &> /dev/null; then
             echo "Detected pacman package manager"
-            if sudo pacman -R fzf 2>/dev/null; then
-                echo "✓ Successfully removed fzf via pacman"
+            if sudo pacman -R gum 2>/dev/null; then
+                echo "✓ Successfully removed gum via pacman"
             else
-                echo "✗ Failed to remove fzf via pacman (may not be installed via package manager)"
+                echo "✗ Failed to remove gum via pacman"
+            fi
+        elif command -v nix-env &> /dev/null; then
+            echo "Detected Nix"
+            if nix-env -e gum; then
+                echo "✓ Successfully removed gum via Nix"
+            fi
+        elif command -v flox &> /dev/null; then
+            echo "Detected Flox"
+            if flox uninstall gum; then
+                echo "✓ Successfully removed gum via Flox"
             fi
         else
-            echo "⚠️  Could not detect package manager. fzf may have been installed manually."
-            echo "If you installed fzf from source, you can remove it manually:"
-            echo "  rm -rf ~/.fzf"
-            echo "  Remove fzf-related lines from your shell config files"
+            echo "⚠️  Could not detect package manager. gum may have been installed manually."
+            echo "Please remove it manually according to how it was installed."
         fi
     else
-        echo "✓ Keeping fzf installed"
+        echo "✓ Keeping gum installed"
     fi
 else
-    echo "✓ fzf is not installed, nothing to remove"
+    echo "✓ gum is not installed, nothing to remove"
 fi
 
 echo ""

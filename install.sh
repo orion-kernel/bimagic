@@ -16,7 +16,10 @@ fi
 install_gum() {
     echo "🔍 Checking for supported package managers to install gum..."
 
-    if command -v brew &> /dev/null; then
+    if [ -n "$TERMUX_VERSION" ] && command -v pkg &> /dev/null; then
+        echo "📦 Detected Termux - Installing gum via pkg..."
+        pkg install -y gum
+    elif command -v brew &> /dev/null; then
         echo "📦 Installing gum via Homebrew..."
         brew install gum
     elif command -v apt &> /dev/null; then
@@ -84,8 +87,11 @@ else
     IS_LOCAL=false
 fi
 
-# Determine the target directory (prioritize ~/bin if it exists, else /usr/local/bin)
-if [ -d "$HOME/bin" ] && [ -w "$HOME/bin" ]; then
+# Determine the target directory (prioritize Termux prefix, then ~/bin if it exists, else /usr/local/bin)
+if [ -n "$TERMUX_VERSION" ]; then
+    TARGET_DIR="$PREFIX/bin"
+    USE_SUDO=false
+elif [ -d "$HOME/bin" ] && [ -w "$HOME/bin" ]; then
     TARGET_DIR="$HOME/bin"
     USE_SUDO=false
 else
