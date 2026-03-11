@@ -1,4 +1,5 @@
 # Bimagic - Git Wizard
+
 <p align="center">
   <img width="400" style="border-radius: 12px;" alt="Image" src="https://github.com/user-attachments/assets/d74de26d-949b-4aa9-9b2e-c25de5b25b42" />
 </p>
@@ -13,10 +14,10 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 
 ## Sample
 
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/895772c0-ddda-444a-a4ae-390be46e625c" />
+<img width="1920" height="1080" alt="Image" src="Sample/2026-03-11-191645_hyprshot.png" />
 <p align="center">bimagic in a terminal (kitty)</p>
 
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/92e8ccc3-baae-4840-b3f3-4b425f77f045" />
+<img width="1920" height="1080" alt="Image" src="Sample/2026-03-11-191744_hyprshot.png" />
 <p align="center">bimagic in neovim</p>
 
 ## Features
@@ -179,6 +180,7 @@ bimagic
 ```
 
 **Pro Tip:** You can also use the short alias `wz` (Wizard) for even faster access!
+
 ```bash
 wz
 ```
@@ -247,10 +249,13 @@ At the top of the interface, a status box summarizes:
 This feature allows you to clone a repository with two modes:
 
 #### Standard Clone
+
 Perform a full `git clone` of the target repository.
 
 #### Interactive Clone (Sparse Checkout)
+
 If you only need specific files or folders from a large repository, this mode allows you to:
+
 1. Download the repository metadata without file contents.
 2. Select specific files/folders interactively.
 3. Download only the selected items into your local directory.
@@ -262,7 +267,9 @@ Usage from CLI: `bimagic -d -i "repo-url"`
 Bimagic offers two ways to commit your staged changes:
 
 #### 󰦥 Magic Commit (Builder)
+
 The "Commit Spell" - a guided experience that helps you follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. It prompts you for:
+
 1. **Type**: feat, fix, docs, style, refactor, perf, test, chore.
 2. **Scope**: The area of the code being changed (optional).
 3. **Description**: A short, imperative-mood summary.
@@ -270,6 +277,7 @@ The "Commit Spell" - a guided experience that helps you follow the [Conventional
 5. **Breaking Changes**: Automatically adds `!` to the type/scope for visibility.
 
 #### 󱐋 Quick Commit (One-line)
+
 For when you just want to provide a quick message and move on.
 
 ### Contributor Statistics (Option 10)
@@ -337,17 +345,23 @@ Merge another branch into your current branch using an interactive selector. If 
 This feature is essentially an "Undo Button" for Git. It allows you to undo the last commit with three levels of severity:
 
 #### 1. Soft Undo
+
 Cancels the commit but leaves your files **staged**. Best for fixing typos or adding forgotten files.
+
 - **Scenario:** You committed "Added login" but forgot `login.css`.
 - **Result:** Files are green (staged), ready to commit again.
 
 #### 2. Mixed Undo
+
 Cancels the commit and **unstages** the files. Best for when you want to split work into multiple commits.
+
 - **Scenario:** You committed backend and frontend work together but want to separate them.
 - **Result:** Files are red (modified), keeping your work but not staged.
 
 #### 3. Hard Undo
+
 **Destroys** the commit and all changes. Reverts to the previous state.
+
 - **Scenario:** You want to trash the last commit completely.
 - **Result:** Everything from that commit is gone forever. **Use with caution!**
 
