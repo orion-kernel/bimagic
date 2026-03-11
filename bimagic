@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="v1.3.0"
+VERSION="v1.3.1"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
   echo "Bimagic Git Wizard $VERSION"
@@ -238,9 +238,9 @@ show_contributor_stats() {
 
   # Get git log with numstat and format for processing
   if [[ -n "$since" ]]; then
-    gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'%aN' --numstat $since > $temp_file 2>/dev/null"
+    gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'COMMIT|%aN' --numstat $since > $temp_file 2>/dev/null"
   else
-    gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'%aN' --numstat > $temp_file 2>/dev/null"
+    gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'COMMIT|%aN' --numstat > $temp_file 2>/dev/null"
   fi
 
   # Check if we got any data
@@ -255,26 +255,28 @@ show_contributor_stats() {
     BEGIN {
         total_lines = 0
     }
-    /^[0-9]/ {
+    /^COMMIT\|/ {
+        # Extract author name (everything after COMMIT|)
+        split($0, a, "|")
+        author = a[2]
+        author_commits[author]++
+        last_author = author
+    }
+    /^[0-9-]/ {
         added = $1
         deleted = $2
-        if (added != "-") total_added += added
-        if (deleted != "-") total_deleted += deleted
+        # Use 0 if added/deleted is "-" (binary files)
+        add_num = (added == "-" ? 0 : added)
+        del_num = (deleted == "-" ? 0 : deleted)
+        
         author = last_author
         if (author != "") {
-            author_lines[author] += added + deleted
-            total_lines += added + deleted
-            author_commits[author]++
-        }
-    }
-    !/^[0-9]/ && !/^$/ {
-        last_author = $0
-        if (!author_commits[$0]) {
-            author_commits[$0] = 0
+            author_lines[author] += add_num + del_num
+            total_lines += add_num + del_num
         }
     }
     END {
-        for (author in author_lines) {
+        for (author in author_commits) {
             if (total_lines > 0) {
                 percentage = (author_lines[author] / total_lines) * 100
             } else {
@@ -606,9 +608,10 @@ if [[ "$CLI_MODE" == "undo" ]]; then
   "Hard"*)
     if gum confirm " DANGER: This deletes your work forever. Are you sure?"; then
       if [[ "$is_initial_commit" == "true" ]]; then
+        # Unstage everything first, then clean to ensure files are deleted
         git update-ref -d HEAD
-        git clean -fd
         git rm --cached -r -q . >/dev/null 2>&1
+        git clean -fd
       else
         git reset --hard HEAD~1
       fi
@@ -826,16 +829,18 @@ while true; do
       git init
       print_status "Repo initialized in current directory: $(pwd)"
     else
-      mkdir -p "$dirname" && cd "$dirname" || exit
-      git init
+      mkdir -p "$dirname"
+      # Run init and rename in a subshell to avoid directory tracking issues
+      (
+        cd "$dirname" || exit 1
+        git init
+        current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+        if [[ "$current_branch" == "master" ]]; then
+          git branch -M main
+          echo "Default branch renamed from 'master' to 'main' in $dirname"
+        fi
+      )
       print_status "Repo initialized in new directory: $dirname"
-      cd - >/dev/null 2>&1 || exit
-    fi
-
-    current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-    if [[ "$current_branch" == "master" ]]; then
-      git branch -M main
-      print_status "Default branch renamed from 'master' to 'main'"
     fi
     ;;
   " Add files")
@@ -854,9 +859,11 @@ while true; do
         git add .
         print_status "All files staged."
       else
-        # Use xargs to pass the file list to git add. This handles filenames with spaces.
-        echo "$files" | xargs git add
-        print_status "Files staged."
+        # Correctly handle filenames with spaces by reading line by line
+        echo "$files" | while read -r f; do
+          [[ -n "$f" ]] && git add "$f"
+        done
+        print_status "Selected files staged."
         # Optionally, list the files that were staged
         echo "$files"
       fi
