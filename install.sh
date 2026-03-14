@@ -3,11 +3,22 @@
 # Exit on error
 set -e
 
+cat <<"EOF"
+
+
+▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖
+▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   
+▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   
+▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖
+
+
+EOF
+
 # GitHub repository URL
 REPO_URL="https://github.com/Bimbok/bimagic.git"
 
 # Check for required tools
-if ! command -v git &> /dev/null; then
+if ! command -v git &>/dev/null; then
     echo "Error: git is not installed. Please install git first."
     exit 1
 fi
@@ -16,31 +27,31 @@ fi
 install_gum() {
     echo "🔍 Checking for supported package managers to install gum..."
 
-    if [ -n "$TERMUX_VERSION" ] && command -v pkg &> /dev/null; then
+    if [ -n "$TERMUX_VERSION" ] && command -v pkg &>/dev/null; then
         echo "📦 Detected Termux - Installing gum via pkg..."
         pkg install -y gum
-    elif command -v brew &> /dev/null; then
+    elif command -v brew &>/dev/null; then
         echo "📦 Installing gum via Homebrew..."
         brew install gum
-    elif command -v apt &> /dev/null; then
+    elif command -v apt &>/dev/null; then
         echo "📦 Detected Ubuntu/Debian - Installing gum via Charm repository..."
         sudo mkdir -p /etc/apt/keyrings
         curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
         echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
         sudo apt update && sudo apt install -y gum
-    elif command -v pacman &> /dev/null; then
+    elif command -v pacman &>/dev/null; then
         echo "📦 Installing gum via pacman (Arch Linux)..."
         sudo pacman -S --noconfirm gum
-    elif command -v nix-env &> /dev/null; then
+    elif command -v nix-env &>/dev/null; then
         echo "📦 Installing gum via Nix..."
         nix-env -iA nixpkgs.gum
-    elif command -v flox &> /dev/null; then
+    elif command -v flox &>/dev/null; then
         echo "📦 Installing gum via Flox..."
         flox install gum
-    elif command -v winget &> /dev/null; then
+    elif command -v winget &>/dev/null; then
         echo "📦 Installing gum via WinGet..."
         winget install charmbracelet.gum
-    elif command -v scoop &> /dev/null; then
+    elif command -v scoop &>/dev/null; then
         echo "📦 Installing gum via Scoop..."
         scoop install charm-gum
     else
@@ -51,12 +62,12 @@ install_gum() {
 }
 
 # Check for gum dependency
-if ! command -v gum &> /dev/null; then
+if ! command -v gum &>/dev/null; then
     echo "⚠️  gum is not installed. Bimagic requires gum for its modern UI."
     echo ""
     read -p "Do you want to automatically install gum? (Y/n): " -r auto_install_gum
-    auto_install_gum=${auto_install_gum:-Y}  # Default to Y if empty
-    
+    auto_install_gum=${auto_install_gum:-Y} # Default to Y if empty
+
     if [[ $auto_install_gum =~ ^[Yy]$ ]]; then
         echo "🚀 Attempting to automatically install gum..."
         if install_gum; then
@@ -136,3 +147,4 @@ if [[ ":$PATH:" != ":$TARGET_DIR:"* ]]; then
     echo "  echo 'export PATH=\"$PATH:$TARGET_DIR\"' >> ~/.bashrc"
     echo "  source ~/.bashrc"
 fi
+
