@@ -3,102 +3,103 @@
 # Exit on error
 set -e
 
-cat <<"EOF"
-
-
-▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖
-▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   
-▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   
-▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖
-
-
-EOF
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
 
 # GitHub repository URL
 REPO_URL="https://github.com/Bimbok/bimagic.git"
 
+clear
+
+# Display ASCII Art with Gradient
+echo -e "\033[38;5;51m▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
+echo -e "\033[38;5;45m▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   \033[0m"
+echo -e "\033[38;5;39m▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   \033[0m"
+echo -e "\033[38;5;99m▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖\033[0m"
+echo -e "\033[38;5;135m                              \033[0m"
+echo -e "\033[38;5;171m                              \033[0m"
+echo -e "\033[38;5;207m                              \033[0m"
+
+echo -e "${CYAN}${BOLD}✨ The Magical CLI Wizard Installer ✨${NC}\n"
+
+# Function to print status
+status_info() { echo -e "${BLUE}ℹ${NC}  $1"; }
+status_success() { echo -e "${GREEN}✅${NC}  $1"; }
+status_error() { echo -e "${RED}❌${NC}  $1"; }
+status_warn() { echo -e "${YELLOW}⚠️${NC}  $1"; }
+
 # Check for required tools
+status_info "Checking prerequisites..."
 if ! command -v git &>/dev/null; then
-    echo "Error: git is not installed. Please install git first."
+    status_error "git is not installed. Please install git first."
     exit 1
 fi
 
 # Function to install gum
 install_gum() {
-    echo "🔍 Checking for supported package managers to install gum..."
-
+    status_info "Installing gum..."
     if [ -n "$TERMUX_VERSION" ] && command -v pkg &>/dev/null; then
-        echo "📦 Detected Termux - Installing gum via pkg..."
         pkg install -y gum
     elif command -v brew &>/dev/null; then
-        echo "📦 Installing gum via Homebrew..."
         brew install gum
     elif command -v apt &>/dev/null; then
-        echo "📦 Detected Ubuntu/Debian - Installing gum via Charm repository..."
         sudo mkdir -p /etc/apt/keyrings
         curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
         echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
         sudo apt update && sudo apt install -y gum
     elif command -v pacman &>/dev/null; then
-        echo "📦 Installing gum via pacman (Arch Linux)..."
         sudo pacman -S --noconfirm gum
     elif command -v nix-env &>/dev/null; then
-        echo "📦 Installing gum via Nix..."
         nix-env -iA nixpkgs.gum
-    elif command -v flox &>/dev/null; then
-        echo "📦 Installing gum via Flox..."
-        flox install gum
-    elif command -v winget &>/dev/null; then
-        echo "📦 Installing gum via WinGet..."
-        winget install charmbracelet.gum
-    elif command -v scoop &>/dev/null; then
-        echo "📦 Installing gum via Scoop..."
-        scoop install charm-gum
     else
-        echo "❌ Could not find a supported package manager for automated gum installation."
-        echo "Please install gum manually using instructions from: https://github.com/charmbracelet/gum"
         return 1
     fi
 }
 
 # Check for gum dependency
 if ! command -v gum &>/dev/null; then
-    echo "⚠️  gum is not installed. Bimagic requires gum for its modern UI."
-    echo ""
-    read -p "Do you want to automatically install gum? (Y/n): " -r auto_install_gum
-    auto_install_gum=${auto_install_gum:-Y} # Default to Y if empty
+    status_warn "gum is not installed. Bimagic uses gum for its modern UI."
+    echo -e -n "   ${BOLD}Do you want to automatically install gum? (Y/n): ${NC}"
+    read -r auto_install_gum
+    auto_install_gum=${auto_install_gum:-Y}
 
     if [[ $auto_install_gum =~ ^[Yy]$ ]]; then
-        echo "🚀 Attempting to automatically install gum..."
         if install_gum; then
-            echo "✅ gum installed successfully!"
+            status_success "gum installed successfully!"
         else
-            echo "❌ Failed to install gum automatically."
-            echo "Please install gum manually: https://github.com/charmbracelet/gum"
+            status_error "Failed to install gum automatically."
+            echo "   Please install it manually: https://github.com/charmbracelet/gum"
             exit 1
         fi
     else
-        echo "Skipping gum installation. Bimagic will not work without it."
+        status_error "Bimagic cannot run without gum. Installation aborted."
         exit 1
     fi
 else
-    echo "✅ gum is installed and ready"
+    status_success "gum is ready."
 fi
 
 # Locate the bimagic script
 if [ -f "./bimagic" ]; then
-    echo "📦 Using local bimagic script..."
+    status_info "Using local bimagic script..."
     SOURCE_PATH="./bimagic"
     IS_LOCAL=true
 else
-    echo "🌐 Cloning bimagic repository..."
+    status_info "Fetching bimagic from GitHub..."
     TEMP_DIR=$(mktemp -d)
     git clone "$REPO_URL" "$TEMP_DIR"
     SOURCE_PATH="$TEMP_DIR/bimagic"
     IS_LOCAL=false
 fi
 
-# Determine the target directory (prioritize Termux prefix, then ~/bin if it exists, else /usr/local/bin)
+# Determine the target directory
 if [ -n "$TERMUX_VERSION" ]; then
     TARGET_DIR="$PREFIX/bin"
     USE_SUDO=false
@@ -110,41 +111,34 @@ else
     USE_SUDO=true
 fi
 
-# Ensure the target directory exists
+# Installation step
+status_info "Installing to ${TARGET_DIR}..."
+
 if [ "$USE_SUDO" = true ]; then
     sudo mkdir -p "$TARGET_DIR"
-else
-    mkdir -p "$TARGET_DIR"
-fi
-
-# Copy the script and make it executable
-if [ "$USE_SUDO" = true ]; then
     sudo cp "$SOURCE_PATH" "$TARGET_DIR/bimagic"
     sudo chmod +x "$TARGET_DIR/bimagic"
-    # Create the 'wz' alias (symlink)
-    echo "🔗 Creating 'wz' alias..."
     sudo ln -sf "$TARGET_DIR/bimagic" "$TARGET_DIR/wz"
 else
+    mkdir -p "$TARGET_DIR"
     cp "$SOURCE_PATH" "$TARGET_DIR/bimagic"
     chmod +x "$TARGET_DIR/bimagic"
-    # Create the 'wz' alias (symlink)
-    echo "🔗 Creating 'wz' alias..."
     ln -sf "$TARGET_DIR/bimagic" "$TARGET_DIR/wz"
 fi
 
-# Clean up if we cloned
+# Clean up
 if [ "$IS_LOCAL" = false ]; then
     rm -rf "$TEMP_DIR"
 fi
 
-echo "Successfully installed bimagic to $TARGET_DIR!"
-echo "You can now use 'bimagic' or the short alias 'wz' to run the wizard."
-echo "Please ensure GITHUB_USER and GITHUB_TOKEN are set as environment variables."
+echo ""
+status_success "Installation Complete!"
+echo -e "\nYou can now use ${PURPLE}bimagic${NC} or the alias ${PURPLE}wz${NC} to start."
+echo -e "Make sure ${CYAN}GITHUB_USER${NC} and ${CYAN}GITHUB_TOKEN${NC} are set."
 
-# Check if target directory is in PATH
+# Check PATH
 if [[ ":$PATH:" != ":$TARGET_DIR:"* ]]; then
-    echo "Note: $TARGET_DIR is not in your PATH. Add it to your shell profile:"
-    echo "  echo 'export PATH=\"$PATH:$TARGET_DIR\"' >> ~/.bashrc"
-    echo "  source ~/.bashrc"
+    echo ""
+    status_warn "$TARGET_DIR is not in your PATH."
+    echo -e "   Add it to your shell profile:\n   ${CYAN}echo 'export PATH=\"\$PATH:$TARGET_DIR\"' >> ~/.bashrc${NC}"
 fi
-
