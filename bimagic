@@ -412,6 +412,64 @@ clone_repo() {
   fi
 }
 
+# a .gitignore generator to your tool
+summon_gitignore() {
+  # Check for curl
+  if ! command -v curl &>/dev/null; then
+    print_error "Error: curl is not installed. Required to summon the Architect."
+    return 1
+  fi
+
+  print_status "📜 Summoning the Architect..."
+
+  # Check if .gitignore already exists
+  if [[ -f ".gitignore" ]]; then
+    print_warning "A .gitignore file already exists in this directory."
+    if ! gum confirm "Do you want to overwrite it?"; then
+      print_status "Operation cancelled."
+      return 0
+    fi
+  fi
+
+  # List of popular templates (curated from github/gitignore)
+  local templates=(
+    "Actionscript" "Ada" "Android" "Angular" "AppEngine" "ArchLinuxPackages" "Autotools"
+    "C++" "C" "CMake" "CUDA" "CakePHP" "ChefCookbook" "Clojure" "CodeIgniter" "Composer"
+    "Dart" "Delphi" "Dotnet" "Drupal" "Elixir" "Elm" "Erlang" "Flutter" "Fortran"
+    "Go" "Godot" "Gradle" "Grails" "Haskell" "Haxe" "Java" "Jekyll" "Joomla" "Julia"
+    "Kotlin" "Laravel" "Lua" "Magento" "Maven" "Nextjs" "Nim" "Nix" "Node" "Objective-C"
+    "Opa" "Perl" "Phalcon" "PlayFramework" "Prestashop" "Processing" "Python" "Qt"
+    "R" "ROS" "Rails" "Ruby" "Rust" "Scala" "Scheme" "Smalltalk" "Swift" "Symfony"
+    "Terraform" "TeX" "Unity" "UnrealEngine" "VisualStudio" "WordPress" "Zig"
+  )
+
+  # Use gum filter for a better selection experience
+  local template=$(printf "%s\n" "${templates[@]}" | gum filter --placeholder "Search for a blueprint (e.g., Python, Node, Rust)...")
+
+  if [[ -z "$template" ]]; then
+    print_status "Cancelled."
+    return 0
+  fi
+
+  # Fetch the template directly from GitHub's official repository
+  print_status "Drawing the magic circle for $template..."
+
+  local url="https://raw.githubusercontent.com/github/gitignore/main/${template}.gitignore"
+
+  if gum spin --title "Fetching template..." -- curl -sL "$url" -o .gitignore; then
+    # Verify the file is not empty (curl might return 404 text if URL is wrong)
+    if grep -q "404: Not Found" .gitignore; then
+      print_error "Failed to summon template: 404 Not Found at $url"
+      rm .gitignore
+      return 1
+    fi
+    print_status "✨ .gitignore for $template created successfully!"
+  else
+    print_error "Failed to summon template. Check your internet connection."
+    return 1
+  fi
+}
+
 # Function for Conventional Commits
 commit_wizard() {
   echo -e "${PURPLE}=== The Alchemist's Commit ===${NC}"
@@ -527,6 +585,10 @@ while [[ $# -gt 0 ]]; do
     CLI_MODE="graph"
     shift
     ;;
+  -a | --architect)
+    CLI_MODE="architect"
+    shift
+    ;;
   *)
     # Argument handling based on current mode
     if [[ "$CLI_MODE" == "clone" && -z "$CLI_URL" ]]; then
@@ -561,6 +623,11 @@ if [[ "$CLI_MODE" == "graph" ]]; then
     exit 1
   fi
   pretty_git_log
+  exit 0
+fi
+
+if [[ "$CLI_MODE" == "architect" ]]; then
+  summon_gitignore
   exit 0
 fi
 
@@ -676,6 +743,43 @@ if [[ "$CLI_MODE" == "lazy" ]]; then
   exit 0
 fi
 
+CONFIG_DIR="$HOME/.config/bimagic"
+VERSION_FILE="$CONFIG_DIR/version"
+
+show_welcome_banner() {
+  clear
+  echo -e "\033[38;5;51m▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
+  echo -e "\033[38;5;45m▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   \033[0m"
+  echo -e "\033[38;5;39m▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   \033[0m"
+  echo -e "\033[38;5;99m▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖\033[0m"
+  echo -e "\033[38;5;135m                              \033[0m"
+
+  echo
+  gum style --foreground 212 --bold "✨ Welcome to Bimagic Git Wizard $VERSION ✨"
+  echo
+
+  if [[ ! -f "$VERSION_FILE" ]]; then
+    gum style --foreground 46 "It looks like this is your first time using Bimagic! Let's cast some spells."
+  else
+    gum style --foreground 46 "Bimagic has been updated to $VERSION! Enjoy the new magic."
+  fi
+  echo
+
+  # Save the current version so this doesn't show again until the next update
+  mkdir -p "$CONFIG_DIR"
+  echo "$VERSION" >"$VERSION_FILE"
+
+  gum style --foreground 240 "Press Enter to open the spellbook..."
+  read -r
+}
+
+if [[ -z "$CLI_MODE" ]]; then
+  # Check if the version file doesn't exist, OR if it doesn't match the current version
+  if [[ ! -f "$VERSION_FILE" ]] || [[ "$(cat "$VERSION_FILE")" != "$VERSION" ]]; then
+    show_welcome_banner
+  fi
+fi
+
 while true; do
   clear
   show_repo_status # <-- shows the status dashboard at the top
@@ -695,13 +799,13 @@ while true; do
       "󱖫 Show status" \
       " Contributor Statistics" \
       " Git graph" \
+      "󰓗 Summon the Architect (.gitignore)" \
       "󰮘 Remove files/folders (rm)" \
       " Merge branches" \
       " Uninitialize repo" \
       "󰁯 Revert commit(s)" \
       "󰓗 Stash operations" \
       "󰿅 Exit"
-  )
 
   echo
 
@@ -1099,6 +1203,10 @@ while true; do
     ;;
   " Contributor Statistics")
     show_contributor_stats
+    ;;
+
+  "󰓗 Summon the Architect (.gitignore)")
+    summon_gitignore
     ;;
 
   "󰁯 Revert commit(s)")

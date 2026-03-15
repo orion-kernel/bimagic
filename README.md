@@ -33,6 +33,7 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 - 🗑️ Safe file/folder removal with git integration
 - 📈 Contributor statistics with time range selection
 - 🌐 Git graph (pretty git log) viewer
+- 📜 The Architect (.gitignore generator)
 - 🔀 Merge branches with conflict detection
 - ⏪ Revert commit(s) with multi-select
 - ⏳ Time Turner (Undo last commit)
@@ -213,6 +214,10 @@ You can also use flags to perform specific actions immediately:
   ```bash
   bimagic -u
   ```
+- **The Architect** (Summon .gitignore):
+  ```bash
+  bimagic -a
+  ```
 
 You'll be presented with an interactive menu where you can choose from various Git operations.
 
@@ -238,11 +243,12 @@ At the top of the interface, a status box summarizes:
 10. **Contributor Statistics** - View per-author activity with time range selection
 11. **Git graph** - Pretty git log with graph and decorations
 12. **Remove files/folders (rm)** - Safely remove files/folders with git integration
-13. **Merge branches** - Merge a selected branch into the current one
-14. **Uninitialize repo** – Remove Git tracking from a project
-15. **Revert commit(s)** - Revert one or more commits (multi-select)
-16. **Stash operations** - Manage stashes (push, pop, list, apply, drop, clear)
-17. **Exit** - Quit the wizard
+13. **Summon the Architect (.gitignore)** - Interactive .gitignore generator with 70+ blueprints
+14. **Merge branches** - Merge a selected branch into the current one
+15. **Uninitialize repo** – Remove Git tracking from a project
+16. **Revert commit(s)** - Revert one or more commits (multi-select)
+17. **Stash operations** - Manage stashes (push, pop, list, apply, drop, clear)
+18. **Exit** - Quit the wizard
 
 ### Clone repository (Option 1)
 
@@ -313,7 +319,20 @@ The `Remove files/folders (rm)` option lets you select files and folders interac
 4. Each selected item is removed appropriately (git-tracked or filesystem)
 5. A success message lists removed paths
 
-### Merge branches (Option 13)
+### Summon the Architect (Option 13)
+
+"The Architect" is a powerful `.gitignore` generator that pulls the latest industry-standard blueprints directly from GitHub's official collection.
+
+#### Features:
+
+- **70+ Blueprints**: Supports everything from Node, Python, and Rust to Flutter, Unity, and TeX.
+- **Interactive Search**: Use `gum filter` to quickly find your language or framework.
+- **Safety First**: Asks for confirmation before overwriting an existing `.gitignore` file.
+- **Always Up-to-Date**: Fetches directly from the source to ensure you have the latest rules.
+
+Usage from CLI: `bimagic -a` or `bimagic --architect`
+
+### Merge branches (Option 14)
 
 Merge another branch into your current branch using an interactive selector. If conflicts occur, you will be notified to resolve them manually.
 
@@ -323,7 +342,7 @@ Merge another branch into your current branch using an interactive selector. If 
 2. Select a branch (other than current) to merge into the current one
 3. If merge succeeds, you get a success message; otherwise, conflicts are reported
 
-### Revert commit(s) (Option 15)
+### Revert commit(s) (Option 16)
 
 #### Safety Features:
 
