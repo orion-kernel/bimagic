@@ -131,9 +131,61 @@ if [ "$IS_LOCAL" = false ]; then
   rm -rf "$TEMP_DIR"
 fi
 
+# Function to setup keybindings
+setup_keybinding() {
+  echo ""
+  status_info "Setting up Ctrl+B keybinding..."
+  
+  local shell_config=""
+  local added=false
+
+  # ZSH
+  if [ -f "$HOME/.zshrc" ]; then
+    if ! grep -q "run_bimagic_widget" "$HOME/.zshrc"; then
+      echo -e "\n# START BIMAGIC\n# Bimagic ZSH integration\nrun_bimagic_widget() {\n  zle -I\n  bimagic\n  zle reset-prompt\n}\nzle -N run_bimagic_widget\nbindkey '^b' run_bimagic_widget\n# END BIMAGIC" >> "$HOME/.zshrc"
+      status_success "Added keybinding to .zshrc"
+      added=true
+    else
+      status_info "Keybinding already exists in .zshrc"
+    fi
+  fi
+
+  # BASH
+  if [ -f "$HOME/.bashrc" ]; then
+    if ! grep -q "bind -x '\"\C-b\": bimagic'" "$HOME/.bashrc"; then
+      echo -e "\n# START BIMAGIC\n# Bimagic Bash integration\nbind -x '\"\\C-b\": bimagic'\n# END BIMAGIC" >> "$HOME/.bashrc"
+      status_success "Added keybinding to .bashrc"
+      added=true
+    else
+      status_info "Keybinding already exists in .bashrc"
+    fi
+  fi
+
+  # FISH
+  if [ -d "$HOME/.config/fish" ]; then
+    local fish_config="$HOME/.config/fish/config.fish"
+    mkdir -p "$(dirname "$fish_config")"
+    touch "$fish_config"
+    if ! grep -q "bind \cb 'bimagic" "$fish_config"; then
+      echo -e "\n# START BIMAGIC\n# Bimagic Fish integration\nbind \cb 'bimagic; commandline -f repaint'\n# END BIMAGIC" >> "$fish_config"
+      status_success "Added keybinding to config.fish"
+      added=true
+    else
+      status_info "Keybinding already exists in config.fish"
+    fi
+  fi
+
+  if [ "$added" = true ]; then
+    status_info "Please restart your shell or source your config file to apply changes."
+  fi
+}
+
+setup_keybinding
+
 echo ""
 status_success "Installation Complete!"
 echo -e "\nYou can now use ${PURPLE}bimagic${NC} or the alias ${PURPLE}wz${NC} to start."
+echo -e "Press ${YELLOW}Ctrl + B${NC} in your terminal to quickly open Bimagic."
 echo -e "Make sure ${CYAN}GITHUB_USER${NC} and ${CYAN}GITHUB_TOKEN${NC} are set."
 
 # Check PATH

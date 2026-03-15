@@ -53,24 +53,26 @@ for dir in "${FOUND_INSTALLS[@]}"; do
     fi
 done
 
-# Optional: Remove environment variables from shell config
-read -p "Do you want to remove GITHUB_USER and GITHUB_TOKEN from your shell config? (y/N): " -r remove_vars < /dev/tty
-if [[ $remove_vars =~ ^[Yy]$ ]]; then
-    SHELL_FILES=("$HOME/.bashrc" "$HOME/.zshrc")
+# Optional: Remove environment variables and shell integrations from shell config
+read -p "Do you want to remove GITHUB_USER, GITHUB_TOKEN and shell integrations from your shell config? (y/N): " -r remove_config < /dev/tty
+if [[ $remove_config =~ ^[Yy]$ ]]; then
+    SHELL_FILES=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish")
     
     for file in "${SHELL_FILES[@]}"; do
         if [[ -f "$file" ]]; then
-            # Remove lines containing GITHUB_USER or GITHUB_TOKEN
-            if grep -q "GITHUB_USER\|GITHUB_TOKEN" "$file"; then
+            # Remove lines containing GITHUB_USER or GITHUB_TOKEN or the BIMAGIC block
+            if grep -q "GITHUB_USER\|GITHUB_TOKEN\|# START BIMAGIC" "$file"; then
                 # Create a backup
                 cp "$file" "${file}.backup-$(date +%Y%m%d)"
                 
-                # Remove the lines
+                # Remove the lines/blocks
                 sed -i '/GITHUB_USER\|GITHUB_TOKEN/d' "$file"
-                echo "✓ Removed GitHub variables from $file"
+                sed -i '/# START BIMAGIC/,/# END BIMAGIC/d' "$file"
+                
+                echo "✓ Cleaned up shell config in $file"
                 echo "  A backup was created at ${file}.backup-$(date +%Y%m%d)"
             else
-                echo "✓ No GitHub variables found in $file"
+                echo "✓ No Bimagic configurations found in $file"
             fi
         fi
     done

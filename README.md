@@ -49,6 +49,16 @@ Run this one-line command to install Bimagic:
 curl -sSL https://raw.githubusercontent.com/Bimbok/bimagic/main/install.sh | bash
 ```
 
+### Quick Access (Keybinding)
+
+The installer automatically sets up a **Ctrl + B** keybinding for **Zsh**, **Bash**, and **Fish** shells. This allows you to summon the Git Wizard from anywhere in your terminal instantly!
+
+- **Zsh**: Uses a custom ZLE widget to ensure a clean UI transition.
+- **Bash**: Uses `bind -x` for direct execution.
+- **Fish**: Uses `bind \cb` with a repaint command.
+
+*Note: You may need to restart your terminal or source your config file (e.g., `source ~/.zshrc`) after installation for the keybinding to take effect.*
+
 ### Neovim Integration
 
 You can use Bimagic directly inside Neovim! This integration wraps the CLI tool in a floating terminal window using `toggleterm.nvim` for a seamless workflow.
@@ -180,7 +190,9 @@ Simply run the `bimagic` command in your terminal:
 bimagic
 ```
 
-**Pro Tip:** You can also use the short alias `wz` (Wizard) for even faster access!
+**Pro Tip:** 
+- Press **Ctrl + B** in your terminal to quickly summon the wizard from anywhere!
+- You can also use the short alias **wz** (Wizard) for even faster access!
 
 ```bash
 wz
@@ -506,13 +518,11 @@ curl -sSL https://raw.githubusercontent.com/Bimbok/bimagic/main/uninstall.sh | b
    nano ~/.bashrc  # or ~/.zshrc
    ```### What the Uninstall Script Does
 
-   ````
-
-3. **Finds Installations**: Checks common installation directories (~/bin and /usr/local/bin)
-4. **Confirmation**: Asks for confirmation before proceeding
-5. **Removes Bimagic**: Deletes the script from all found locations
-6. **Optional Cleanup**: Offers to remove GitHub environment variables from shell configuration files
-7. **Creates Backups**: Creates timestamped backups of modified shell configuration files
+1. **Finds Installations**: Checks common installation directories (~/bin and /usr/local/bin)
+2. **Confirmation**: Asks for confirmation before proceeding
+3. **Removes Bimagic**: Deletes the script and `wz` alias from all found locations
+4. **Cleans Shell Config**: Offers to remove **GITHUB_USER**, **GITHUB_TOKEN**, and the **Ctrl + B** shell integrations from your config files
+5. **Creates Backups**: Creates timestamped backups of modified shell configuration files
 
 ### Safety Features
 
