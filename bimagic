@@ -806,7 +806,7 @@ while true; do
       "󰁯 Revert commit(s)" \
       "󰓗 Stash operations" \
       "󰿅 Exit"
-
+  )
   echo
 
   case "$choice" in
