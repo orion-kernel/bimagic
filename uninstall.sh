@@ -78,6 +78,15 @@ if [[ $remove_config =~ ^[Yy]$ ]]; then
     done
 fi
 
+# Optional: Remove configuration directory
+if [[ -d "$HOME/.config/bimagic" ]]; then
+    read -p "Do you want to remove the Bimagic configuration directory (including theme.wz)? (y/N): " -r remove_conf_dir < /dev/tty
+    if [[ $remove_conf_dir =~ ^[Yy]$ ]]; then
+        rm -rf "$HOME/.config/bimagic"
+        echo "✓ Successfully removed ~/.config/bimagic"
+    fi
+fi
+
 # Optional: Remove gum if it was installed for Bimagic
 if command -v gum &> /dev/null; then
     echo ""
@@ -129,12 +138,12 @@ if command -v gum &> /dev/null; then
             else
                 echo "✗ Failed to remove gum via pacman"
             fi
-        elif command -v nix-env &> /dev/null; then
+        elif command -v nix-env &>/dev/null; then
             echo "Detected Nix"
             if nix-env -e gum; then
                 echo "✓ Successfully removed gum via Nix"
             fi
-        elif command -v flox &> /dev/null; then
+        elif command -v flox &>/dev/null; then
             echo "Detected Flox"
             if flox uninstall gum; then
                 echo "✓ Successfully removed gum via Flox"

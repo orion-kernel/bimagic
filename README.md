@@ -36,6 +36,7 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 - 📜 The Architect (.gitignore generator)
 - 🔀 Merge branches with conflict detection
 - ⏪ Revert commit(s) with multi-select
+- 🎨 Theme Customization (ANSI and Hex color support)
 - ⏳ Time Turner (Undo last commit)
 - 🗃️ Stash operations (Push, Pop, List, Apply, Drop, Clear)
 
@@ -171,6 +172,38 @@ export GITHUB_TOKEN="your_github_personal_access_token"
 
 ```bash
 source ~/.bashrc  # or source ~/.zshrc
+```
+
+### Theme Customization 🎨
+
+Bimagic allows you to fully customize the UI colors through a theme file.
+
+1. **Location**: The theme file is located at `~/.config/bimagic/theme.wz`.
+2. **Formats**: You can use **ANSI color numbers (0-255)** or **Hex codes (#RRGGBB)**.
+3. **TrueColor Support**: Hex codes will automatically enable TrueColor mode in supported terminals.
+
+#### Example `theme.wz`:
+
+```bash
+# Bimagic Theme Configuration
+
+# Primary color for banners and highlights
+BIMAGIC_PRIMARY="#00FFFF"
+
+# Secondary color (Cursor, Remotes)
+BIMAGIC_SECONDARY="51"
+
+# Success, Error, and Warning colors
+BIMAGIC_SUCCESS="#00FF87"
+BIMAGIC_ERROR="196"
+BIMAGIC_WARNING="214"
+
+# Banner Gradients (ANSI 0-255)
+BANNER_COLOR_1="51"
+BANNER_COLOR_2="45"
+BANNER_COLOR_3="39"
+BANNER_COLOR_4="99"
+BANNER_COLOR_5="135"
 ```
 
 ### Creating a GitHub Personal Access Token

@@ -126,6 +126,50 @@ else
   ln -sf "$TARGET_DIR/bimagic" "$TARGET_DIR/wz"
 fi
 
+# Create default theme.wz
+CONFIG_DIR="$HOME/.config/bimagic"
+THEME_FILE="$CONFIG_DIR/theme.wz"
+
+if [ ! -f "$THEME_FILE" ]; then
+  status_info "Creating default theme.wz..."
+  mkdir -p "$CONFIG_DIR"
+  cat <<EOF > "$THEME_FILE"
+# Bimagic Theme Configuration
+# You can use ANSI color numbers (0-255) or Hex codes (#RRGGBB)
+
+# Primary color for banners and highlights
+BIMAGIC_PRIMARY="212"
+
+# Secondary/Accent color
+BIMAGIC_SECONDARY="51"
+
+# Success color (for status messages)
+BIMAGIC_SUCCESS="46"
+
+# Error color
+BIMAGIC_ERROR="196"
+
+# Warning color
+BIMAGIC_WARNING="214"
+
+# Info/Cyan color
+BIMAGIC_INFO="39"
+
+# Muted color for hints and footer
+BIMAGIC_MUTED="240"
+
+# Banner Gradients (ANSI 0-255)
+BANNER_COLOR_1="51"
+BANNER_COLOR_2="45"
+BANNER_COLOR_3="39"
+BANNER_COLOR_4="99"
+BANNER_COLOR_5="135"
+EOF
+  status_success "Default theme.wz created at $THEME_FILE"
+else
+  status_info "Existing theme.wz found at $THEME_FILE, skipping creation."
+fi
+
 # Clean up
 if [ "$IS_LOCAL" = false ]; then
   rm -rf "$TEMP_DIR"

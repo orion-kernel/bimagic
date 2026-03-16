@@ -1,11 +1,58 @@
 #!/bin/bash
 
-VERSION="v1.3.2"
+VERSION="v1.4.1"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
   echo "Bimagic Git Wizard $VERSION"
   exit 0
 fi
+
+# Configuration and Theme
+CONFIG_DIR="$HOME/.config/bimagic"
+THEME_FILE="$CONFIG_DIR/theme.wz"
+
+# Default colors (ANSI 0-255 or HEX)
+BIMAGIC_PRIMARY="212"
+BIMAGIC_SECONDARY="51"
+BIMAGIC_SUCCESS="46"
+BIMAGIC_ERROR="196"
+BIMAGIC_WARNING="214"
+BIMAGIC_INFO="39"
+BIMAGIC_MUTED="240"
+
+# Banner Colors
+BANNER_COLOR_1="51"
+BANNER_COLOR_2="45"
+BANNER_COLOR_3="39"
+BANNER_COLOR_4="99"
+BANNER_COLOR_5="135"
+
+# Load theme if it exists
+if [[ -f "$THEME_FILE" ]]; then
+  source "$THEME_FILE"
+fi
+
+# Function to get ANSI escape sequence for echo
+get_ansi_esc() {
+  local color=$1
+  if [[ "$color" =~ ^# ]]; then
+    local r=$(printf "%d" "0x${color:1:2}")
+    local g=$(printf "%d" "0x${color:3:2}")
+    local b=$(printf "%d" "0x${color:5:2}")
+    echo -e "\033[38;2;${r};${g};${b}m"
+  else
+    echo -e "\033[38;5;${color}m"
+  fi
+}
+
+# Colors for output (using theme)
+GREEN=$(get_ansi_esc "$BIMAGIC_SUCCESS")
+RED=$(get_ansi_esc "$BIMAGIC_ERROR")
+YELLOW=$(get_ansi_esc "$BIMAGIC_WARNING")
+BLUE=$(get_ansi_esc "$BIMAGIC_SECONDARY")
+PURPLE=$(get_ansi_esc "$BIMAGIC_PRIMARY")
+CYAN=$(get_ansi_esc "$BIMAGIC_INFO")
+NC='\033[0m' # No Color
 
 # Ensure gum is installed
 if ! command -v gum &>/dev/null; then
@@ -16,15 +63,6 @@ fi
 
 echo "Welcome to the Git Wizard! Let's work some magic..."
 echo
-
-# Colors for output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
 
 # Sound functions
 play_sound() {
@@ -64,17 +102,17 @@ play_sound() {
   esac
 }
 print_status() {
-  gum style --foreground 212 "$1"
+  gum style --foreground "$BIMAGIC_PRIMARY" "$1"
   play_sound "success"
 }
 
 print_error() {
-  gum style --foreground 196 "$1"
+  gum style --foreground "$BIMAGIC_ERROR" "$1"
   play_sound "error"
 }
 
 print_warning() {
-  gum style --foreground 214 "$1"
+  gum style --foreground "$BIMAGIC_WARNING" "$1"
   play_sound "warning"
 }
 
@@ -164,14 +202,14 @@ show_repo_status() {
   if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
     if git ls-files -u | grep -q .; then
       status="🔴 conflicts"
-      color="196" # Red
+      color="$BIMAGIC_ERROR"
     else
       status="🟢 clean"
-      color="46" # Green
+      color="$BIMAGIC_SUCCESS"
     fi
   else
     status="🟡 uncommitted"
-    color="226" # Yellow
+    color="$BIMAGIC_WARNING"
   fi
 
   local display_user=${GITHUB_USER:-"SSH/Local"}
@@ -394,8 +432,6 @@ clone_repo() {
     # If the list is huge, this might fail on command line length.
     # Ideally we pipe to 'git sparse-checkout set --stdin', but gum returns newline separated.
 
-    echo "$selected_paths" | git sparse-checkout set --stdin
-    # 4. Checkout HEAD to download the blobs for matched files
     gum spin --title "Downloading selected files..." -- git checkout HEAD
 
     popd >/dev/null
@@ -525,7 +561,7 @@ ${body}"
 
   # Preview and Confirm
   echo
-  gum style --border rounded --border-foreground 212 --padding "1 2" \
+  gum style --border rounded --border-foreground "$BIMAGIC_PRIMARY" --padding "1 2" \
     "PREVIEW:" "$commit_msg"
   echo
 
@@ -748,20 +784,20 @@ VERSION_FILE="$CONFIG_DIR/version"
 
 show_welcome_banner() {
   clear
-  echo -e "\033[38;5;51m▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
-  echo -e "\033[38;5;45m▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   \033[0m"
-  echo -e "\033[38;5;39m▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   \033[0m"
-  echo -e "\033[38;5;99m▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖\033[0m"
-  echo -e "\033[38;5;135m                              \033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_1")▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_2")▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   \033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_3")▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   \033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_4")▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖\033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_5")                              \033[0m"
 
   echo
-  gum style --foreground 212 --bold "✨ Welcome to Bimagic Git Wizard $VERSION ✨"
+  gum style --foreground "$BIMAGIC_PRIMARY" --bold "✨ Welcome to Bimagic Git Wizard $VERSION ✨"
   echo
 
   if [[ ! -f "$VERSION_FILE" ]]; then
-    gum style --foreground 46 "It looks like this is your first time using Bimagic! Let's cast some spells."
+    gum style --foreground "$BIMAGIC_SUCCESS" "It looks like this is your first time using Bimagic! Let's cast some spells."
   else
-    gum style --foreground 46 "Bimagic has been updated to $VERSION! Enjoy the new magic."
+    gum style --foreground "$BIMAGIC_SUCCESS" "Bimagic has been updated to $VERSION! Enjoy the new magic."
   fi
   echo
 
@@ -769,7 +805,7 @@ show_welcome_banner() {
   mkdir -p "$CONFIG_DIR"
   echo "$VERSION" >"$VERSION_FILE"
 
-  gum style --foreground 240 "Press Enter to open the spellbook..."
+  gum style --foreground "$BIMAGIC_MUTED" "Press Enter to open the spellbook..."
   read -r
 }
 
@@ -783,11 +819,10 @@ fi
 while true; do
   clear
   show_repo_status # <-- shows the status dashboard at the top
-
   # gum menu
   choice=$(
     gum choose --header " Choose your spell: (j/k to navigate)" \
-      --cursor " " --cursor.foreground "#FF00FF" \
+      --cursor " " --cursor.foreground "$BIMAGIC_PRIMARY" \
       " Clone repository" \
       " Init new repo" \
       " Add files" \
@@ -918,7 +953,7 @@ while true; do
         ;;
       esac
       echo
-      gum style --foreground 240 "Press Enter to continue..."
+      gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
       read -r
     done
     ;;
@@ -1270,6 +1305,6 @@ while true; do
   esac
 
   echo
-  gum style --foreground 240 "Press Enter to continue..."
+  gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
   read -r
 done
