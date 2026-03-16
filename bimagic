@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="v1.3.2"
+VERSION="v1.4.1"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
   echo "Bimagic Git Wizard $VERSION"
