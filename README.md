@@ -58,7 +58,7 @@ The installer automatically sets up a **Ctrl + B** keybinding for **Zsh**, **Bas
 - **Bash**: Uses `bind -x` for direct execution.
 - **Fish**: Uses `bind \cb` with a repaint command.
 
-*Note: You may need to restart your terminal or source your config file (e.g., `source ~/.zshrc`) after installation for the keybinding to take effect.*
+_Note: You may need to restart your terminal or source your config file (e.g., `source ~/.zshrc`) after installation for the keybinding to take effect._
 
 ### Neovim Integration
 
@@ -185,25 +185,36 @@ Bimagic allows you to fully customize the UI colors through a theme file.
 #### Example `theme.wz`:
 
 ```bash
-# Bimagic Theme Configuration
+# Bimagic Theme - Arctic Neon
+# Copy this to ~/.config/bimagic/theme.wz
 
-# Primary color for banners and highlights
+# Primary color - Neon Cyan
 BIMAGIC_PRIMARY="#00FFFF"
 
-# Secondary color (Cursor, Remotes)
-BIMAGIC_SECONDARY="51"
+# Secondary color - Deep Sky Blue
+BIMAGIC_SECONDARY="#00AFFF"
 
-# Success, Error, and Warning colors
+# Success color - Spring Green
 BIMAGIC_SUCCESS="#00FF87"
-BIMAGIC_ERROR="196"
-BIMAGIC_WARNING="214"
 
-# Banner Gradients (ANSI 0-255)
-BANNER_COLOR_1="51"
-BANNER_COLOR_2="45"
-BANNER_COLOR_3="39"
-BANNER_COLOR_4="99"
-BANNER_COLOR_5="135"
+# Error color - Hot Pink
+BIMAGIC_ERROR="#FF005F"
+
+# Warning color - Amber
+BIMAGIC_WARNING="#FFD700"
+
+# Info color - Seafoam
+BIMAGIC_INFO="#00FFAF"
+
+# Muted color - Steel Grey
+BIMAGIC_MUTED="243"
+
+# Banner Gradients (Deep Blue to Cyan)
+BANNER_COLOR_1="21"
+BANNER_COLOR_2="27"
+BANNER_COLOR_3="33"
+BANNER_COLOR_4="39"
+BANNER_COLOR_5="45"
 ```
 
 ### Creating a GitHub Personal Access Token
@@ -223,7 +234,8 @@ Simply run the `bimagic` command in your terminal:
 bimagic
 ```
 
-**Pro Tip:** 
+**Pro Tip:**
+
 - Press **Ctrl + B** in your terminal to quickly summon the wizard from anywhere!
 - You can also use the short alias **wz** (Wizard) for even faster access!
 
@@ -551,11 +563,13 @@ curl -sSL https://raw.githubusercontent.com/Bimbok/bimagic/main/uninstall.sh | b
    nano ~/.bashrc  # or ~/.zshrc
    ```### What the Uninstall Script Does
 
-1. **Finds Installations**: Checks common installation directories (~/bin and /usr/local/bin)
-2. **Confirmation**: Asks for confirmation before proceeding
-3. **Removes Bimagic**: Deletes the script and `wz` alias from all found locations
-4. **Cleans Shell Config**: Offers to remove **GITHUB_USER**, **GITHUB_TOKEN**, and the **Ctrl + B** shell integrations from your config files
-5. **Creates Backups**: Creates timestamped backups of modified shell configuration files
+   ````
+
+3. **Finds Installations**: Checks common installation directories (~/bin and /usr/local/bin)
+4. **Confirmation**: Asks for confirmation before proceeding
+5. **Removes Bimagic**: Deletes the script and `wz` alias from all found locations
+6. **Cleans Shell Config**: Offers to remove **GITHUB_USER**, **GITHUB_TOKEN**, and the **Ctrl + B** shell integrations from your config files
+7. **Creates Backups**: Creates timestamped backups of modified shell configuration files
 
 ### Safety Features
 
