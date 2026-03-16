@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="v1.4.1"
+VERSION="v1.4.2"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
   echo "Bimagic Git Wizard $VERSION"
@@ -806,7 +806,7 @@ show_welcome_banner() {
   echo "$VERSION" >"$VERSION_FILE"
 
   gum style --foreground "$BIMAGIC_MUTED" "Press Enter to open the spellbook..."
-  read -r
+  read -r </dev/tty
 }
 
 if [[ -z "$CLI_MODE" ]]; then
@@ -954,7 +954,7 @@ while true; do
       esac
       echo
       gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
-      read -r
+      read -r </dev/tty
     done
     ;;
   " Init new repo")
@@ -1306,5 +1306,5 @@ while true; do
 
   echo
   gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
-  read -r
+  read -r </dev/tty
 done
