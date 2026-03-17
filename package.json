@@ -1,37 +1,37 @@
 {
-  "name": "bimagic",
-  "version": "1.4.2",
-  "description": "A powerful Bash-based Git automation tool that simplifies your GitHub workflow.",
-  "bin": {
-    "bimagic": "./bimagic",
-    "wz": "./bimagic"
-  },
-  "scripts": {
-    "test": "echo \"No tests specified\""
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/orion-kernel/bimagic.git"
-  },
-  "keywords": [
-    "git",
-    "cli",
-    "automation",
-    "bash",
-    "tui",
-    "gum"
-  ],
-  "author": "Bimbok",
-  "contributors": [
-    "Bimbok",
-    "Aditya Paul (adityapaul26)"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/orion-kernel/bimagic/issues"
-  },
-  "homepage": "https://github.com/orion-kernel/bimagic#readme",
-  "dependencies": {
-    "bimagic": "^1.4.2"
-  }
+    "name": "bimagic",
+    "version": "1.4.3",
+    "description": "A powerful Bash-based Git automation tool that simplifies your GitHub workflow.",
+    "bin": {
+        "bimagic": "./bimagic",
+        "wz": "./bimagic"
+    },
+    "scripts": {
+        "test": "echo \"No tests specified\""
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/orion-kernel/bimagic.git"
+    },
+    "keywords": [
+        "git",
+        "cli",
+        "automation",
+        "bash",
+        "tui",
+        "gum"
+    ],
+    "author": "Bimbok",
+    "contributors": [
+        "Bimbok",
+        "Aditya Paul (adityapaul26)"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/orion-kernel/bimagic/issues"
+    },
+    "homepage": "https://github.com/orion-kernel/bimagic#readme",
+    "dependencies": {
+        "bimagic": "^1.4.2"
+    }
 }
