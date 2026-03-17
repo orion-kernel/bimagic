@@ -1,0 +1,13 @@
+# Ignore images and sample folders
+Sample/
+*.png
+*.jpg
+*.gif
+
+# Ignore your custom install scripts (npm handles installation now)
+install.sh
+uninstall.sh
+
+# Ignore IDE files
+.vscode/
+.idea/
