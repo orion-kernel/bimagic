@@ -49,6 +49,11 @@ Run this one-line command to install Bimagic:
 ```bash
 curl -sSL https://raw.githubusercontent.com/Bimbok/bimagic/main/install.sh | bash
 ```
+You can also install **bimagic** using npm.
+
+```bash
+npm i -g bimagic
+```
 
 ### Quick Access (Keybinding)
 
@@ -143,6 +148,8 @@ export PATH="$HOME/bin:$PATH"  # For user-local installation
 - gum (required for modern UI and interactive selection)
   - See installation instructions below or use the automated script.
   - If not installed, the tool will not work.
+- Node.js **v16 or higher**
+- npm **v8+**
 
 ## Configuration
 
