@@ -133,7 +133,7 @@ THEME_FILE="$CONFIG_DIR/theme.wz"
 if [ ! -f "$THEME_FILE" ]; then
   status_info "Creating default theme.wz..."
   mkdir -p "$CONFIG_DIR"
-  cat <<EOF > "$THEME_FILE"
+  cat <<EOF >"$THEME_FILE"
 # Bimagic Theme Configuration
 # You can use ANSI color numbers (0-255) or Hex codes (#RRGGBB)
 
@@ -176,51 +176,66 @@ if [ "$IS_LOCAL" = false ]; then
 fi
 
 # Function to setup keybindings
+# Function to setup keybindings
 setup_keybinding() {
   echo ""
+
+  # 1. Detect the user's actual default shell
+  local shell_name=$(basename "$SHELL")
+  status_info "Detected default shell: $shell_name"
   status_info "Setting up Ctrl+B keybinding..."
-  
-  local shell_config=""
+
   local added=false
 
-  # ZSH
-  if [ -f "$HOME/.zshrc" ]; then
-    if ! grep -q "run_bimagic_widget" "$HOME/.zshrc"; then
-      echo -e "\n# START BIMAGIC\n# Bimagic ZSH integration\nrun_bimagic_widget() {\n  zle -I\n  bimagic\n  zle reset-prompt\n}\nzle -N run_bimagic_widget\nbindkey '^b' run_bimagic_widget\n# END BIMAGIC" >> "$HOME/.zshrc"
-      status_success "Added keybinding to .zshrc"
-      added=true
-    else
-      status_info "Keybinding already exists in .zshrc"
+  case "$shell_name" in
+  "zsh")
+    local zsh_rc="$HOME/.zshrc"
+    if [ -f "$zsh_rc" ]; then
+      # 2. Check for the Bimagic block explicitly
+      if ! grep -q "# START BIMAGIC" "$zsh_rc"; then
+        # Note: Included the < /dev/tty fix for Zsh widget!
+        echo -e "\n# START BIMAGIC\n# Bimagic ZSH integration\nrun_bimagic_widget() {\n  zle -I\n  bimagic < /dev/tty\n  zle reset-prompt\n}\nzle -N run_bimagic_widget\nbindkey '^b' run_bimagic_widget\n# END BIMAGIC" >>"$zsh_rc"
+        status_success "Added keybinding to $zsh_rc"
+        added=true
+      else
+        status_info "Keybinding already exists in $zsh_rc. Skipping."
+      fi
     fi
-  fi
+    ;;
 
-  # BASH
-  if [ -f "$HOME/.bashrc" ]; then
-    if ! grep -q "bind -x '\"\C-b\": bimagic'" "$HOME/.bashrc"; then
-      echo -e "\n# START BIMAGIC\n# Bimagic Bash integration\nbind -x '\"\\C-b\": bimagic'\n# END BIMAGIC" >> "$HOME/.bashrc"
-      status_success "Added keybinding to .bashrc"
-      added=true
-    else
-      status_info "Keybinding already exists in .bashrc"
+  "bash")
+    local bash_rc="$HOME/.bashrc"
+    if [ -f "$bash_rc" ]; then
+      if ! grep -q "# START BIMAGIC" "$bash_rc"; then
+        echo -e "\n# START BIMAGIC\n# Bimagic Bash integration\nbind -x '\"\\C-b\": bimagic'\n# END BIMAGIC" >>"$bash_rc"
+        status_success "Added keybinding to $bash_rc"
+        added=true
+      else
+        status_info "Keybinding already exists in $bash_rc. Skipping."
+      fi
     fi
-  fi
+    ;;
 
-  # FISH
-  if [ -d "$HOME/.config/fish" ]; then
+  "fish")
     local fish_config="$HOME/.config/fish/config.fish"
     mkdir -p "$(dirname "$fish_config")"
     touch "$fish_config"
-    if ! grep -q "bind \cb 'bimagic" "$fish_config"; then
-      echo -e "\n# START BIMAGIC\n# Bimagic Fish integration\nbind \cb 'bimagic; commandline -f repaint'\n# END BIMAGIC" >> "$fish_config"
+    if ! grep -q "# START BIMAGIC" "$fish_config"; then
+      echo -e "\n# START BIMAGIC\n# Bimagic Fish integration\nbind \cb 'bimagic; commandline -f repaint'\n# END BIMAGIC" >>"$fish_config"
       status_success "Added keybinding to config.fish"
       added=true
     else
-      status_info "Keybinding already exists in config.fish"
+      status_info "Keybinding already exists in config.fish. Skipping."
     fi
-  fi
+    ;;
+
+  *)
+    status_warn "Unsupported or unknown shell ($shell_name). Cannot automatically add keybindings."
+    ;;
+  esac
 
   if [ "$added" = true ]; then
-    status_info "Please restart your shell or source your config file to apply changes."
+    status_info "Please restart your terminal or source your config file to apply changes."
   fi
 }
 
