@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="v1.4.4"
+VERSION="v1.4.5"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
     echo "Bimagic Git Wizard $VERSION"
@@ -53,7 +53,7 @@ BLUE=$(get_ansi_esc "$BIMAGIC_SECONDARY")
 PURPLE=$(get_ansi_esc "$BIMAGIC_PRIMARY")
 CYAN=$(get_ansi_esc "$BIMAGIC_INFO")
 GRAY=$(get_ansi_esc "$BIMAGIC_MUTED")
-NC='\033[0m' # No Color
+NC=$(echo -e "\033[0m") # No Color
 
 # Function to draw a progress bar
 draw_progress_bar() {
@@ -246,15 +246,39 @@ STATUS: $status"
 
 generate_bar() {
     local percentage=$1
-    local bar=""
+    local width=20
+    
     # Convert float to integer for bar calculation
     local int_percentage=${percentage%.*}
-    local bars=$((int_percentage / 2)) # Each █ represents 2%
+    # Safety check for integer conversion
+    if [[ ! "$int_percentage" =~ ^[0-9]+$ ]]; then int_percentage=0; fi
+    [[ $int_percentage -gt 100 ]] && int_percentage=100
+    
+    local filled=$((int_percentage * width / 100))
+    local empty=$((width - filled))
 
-    for ((i = 0; i < bars; i++)); do
-        bar+="█"
+    # Pre-get theme colors for the gradient
+    local c1=$(get_ansi_esc "$BANNER_COLOR_1")
+    local c2=$(get_ansi_esc "$BANNER_COLOR_2")
+    local c3=$(get_ansi_esc "$BANNER_COLOR_3")
+    local c4=$(get_ansi_esc "$BANNER_COLOR_4")
+    local c5=$(get_ansi_esc "$BANNER_COLOR_5")
+    local colors=("$c1" "$c2" "$c3" "$c4" "$c5")
+    local gray=$(get_ansi_esc "$BIMAGIC_MUTED")
+
+    local bar="${gray}[${NC}"
+    for ((i = 0; i < filled; i++)); do
+        local color_idx=$(( i * 5 / width ))
+        bar+="${colors[$color_idx]}█"
     done
-    echo "$bar"
+    
+    bar+="$gray"
+    for ((i = 0; i < empty; i++)); do
+        bar+="░"
+    done
+    bar+="]${NC}"
+    
+    echo -e "$bar"
 }
 
 # Function to get contributor statistics
@@ -363,10 +387,11 @@ show_contributor_stats() {
         # Clean up author name
         author=$(echo "$author" | sed 's/^ *//;s/ *$//')
 
-        # Generate bar (max 50 characters for 100%)
+        # Generate themed bar
         local bar=$(generate_bar "$percentage")
 
-        printf "% -15s %-25s %5.1f%% (%d lines)\n" \
+        # Display entry with theme colors
+        printf "${BLUE}%-15s${NC} %s ${YELLOW}%5.1f%%${NC} (${CYAN}%d lines${NC})\n" \
             "$author" "$bar" "$percentage" "$lines"
 
         # Track most active (most commits)
@@ -389,14 +414,14 @@ show_contributor_stats() {
     echo
     echo -e "${CYAN}Highlights:${NC}"
     if [[ -n "$most_active_author" ]]; then
-        echo -e "${BLUE}Most Active:${NC} $most_active_author ($most_commits commits)"
+        echo -e "${BLUE}Most Active:${NC} ${PURPLE}$most_active_author${NC} (${YELLOW}$most_commits commits${NC})"
     fi
     if [[ -n "$most_productive_author" ]]; then
-        echo -e "${BLUE}Most Productive:${NC} $most_productive_author ($highest_avg lines/commit)"
+        echo -e "${BLUE}Most Productive:${NC} ${PURPLE}$most_productive_author${NC} (${YELLOW}$highest_avg lines/commit${NC})"
     fi
 
     local total_contributors=$(echo "$stats" | wc -l)
-    echo -e "${BLUE}Total Contributors:${NC} $total_contributors"
+    echo -e "${BLUE}Total Contributors:${NC} ${YELLOW}$total_contributors${NC}"
 }
 
 # Function to clone a repository (Standard or Interactive)
