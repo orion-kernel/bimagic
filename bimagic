@@ -52,7 +52,24 @@ YELLOW=$(get_ansi_esc "$BIMAGIC_WARNING")
 BLUE=$(get_ansi_esc "$BIMAGIC_SECONDARY")
 PURPLE=$(get_ansi_esc "$BIMAGIC_PRIMARY")
 CYAN=$(get_ansi_esc "$BIMAGIC_INFO")
+GRAY=$(get_ansi_esc "$BIMAGIC_MUTED")
 NC='\033[0m' # No Color
+
+# Function to draw a progress bar
+draw_progress_bar() {
+    local label=$1
+    local percent=$2
+    local width=30
+    local filled=$((percent * width / 100))
+    local empty=$((width - filled))
+
+    local bar=""
+    for ((i = 0; i < filled; i++)); do bar+="█"; done
+    local bg=""
+    for ((i = 0; i < empty; i++)); do bg+="░"; done
+
+    printf "\r\e[K${CYAN}%-20s${NC} [${PURPLE}%s${NC}${GRAY}%s${NC}] ${YELLOW}%3d%%${NC}" "$label" "$bar" "$bg" "$percent"
+}
 
 # Ensure gum is installed
 if ! command -v gum &>/dev/null; then
@@ -399,7 +416,21 @@ clone_repo() {
         print_status "Initializing interactive clone for $repo_name..."
 
         # 1. Clone with --no-checkout and --filter=blob:none (downloads commits/trees, no file contents)
-        if ! gum spin --title "Cloning structure..." -- git clone --filter=blob:none --no-checkout "$url" "$repo_name"; then
+        print_status "Cloning structure for $repo_name..."
+        (
+            set -o pipefail
+            git clone --progress --filter=blob:none --no-checkout "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
+                if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
+                    draw_progress_bar "Receiving Structure" "${BASH_REMATCH[1]}"
+                elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
+                    draw_progress_bar "Resolving Deltas" "${BASH_REMATCH[1]}"
+                fi
+            done
+        )
+        local status=$?
+        echo ""
+
+        if [[ $status -ne 0 || ! -d "$repo_name" ]]; then
             print_error "Clone failed."
             return 1
         fi
@@ -432,14 +463,39 @@ clone_repo() {
         # If the list is huge, this might fail on command line length.
         # Ideally we pipe to 'git sparse-checkout set --stdin', but gum returns newline separated.
 
-        gum spin --title "Downloading selected files..." -- git checkout HEAD
+        print_status "Downloading selected files..."
+        (
+            set -o pipefail
+            git checkout --progress HEAD 2>&1 | while read -r -d $'\r' line; do
+                if [[ $line =~ Updating\ files:\ +([0-9]+)% ]]; then
+                    draw_progress_bar "Updating Files" "${BASH_REMATCH[1]}"
+                fi
+            done
+        )
+        echo ""
 
         popd >/dev/null
         print_status "Successfully cloned selected files into '$repo_name'!"
 
     else
-        # Standard clone
-        if gum spin --title "Cloning repository..." -- git clone "$url"; then
+        # Standard clone with progress bar
+        print_status "Cloning $url into $repo_name..."
+        
+        # Use a subshell with pipefail to catch git clone errors
+        (
+            set -o pipefail
+            git clone --progress "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
+                if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
+                    draw_progress_bar "Receiving Objects" "${BASH_REMATCH[1]}"
+                elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
+                    draw_progress_bar "Resolving Deltas" "${BASH_REMATCH[1]}"
+                fi
+            done
+        )
+        local status=$?
+        echo "" # New line after progress bar
+
+        if [[ $status -eq 0 && -d "$repo_name" ]]; then
             print_status "Successfully cloned '$url' into '$repo_name'!"
         else
             print_error "Clone failed."
