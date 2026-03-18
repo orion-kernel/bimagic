@@ -26,6 +26,8 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 - 🔐 Secure GitHub authentication via personal access tokens
 - 📦 Easy repository initialization and setup
 - 📥 Clone repositories (Standard or Interactive selection)
+- 📊 Dynamic themed progress bar for cloning
+- 🗜️ Shallow clone support (--depth)
 - 🔄 Simplified push/pull operations
 - 🌿 Branch management made easy
 - 📊 Status dashboard (ahead/behind, branch, clean/uncommitted/conflicts)
@@ -309,6 +311,10 @@ You can also use flags to perform specific actions immediately:
   ```bash
   bimagic -d "repo-url"
   ```
+- **Shallow Clone**:
+  ```bash
+  bimagic -d "repo-url" --depth 1
+  ```
 - **Interactive Clone** (Select specific files/folders to download):
   ```bash
   bimagic -d -i "repo-url"
@@ -367,11 +373,12 @@ At the top of the interface, a status box summarizes:
 
 ### Clone repository (Option 1)
 
-This feature allows you to clone a repository with two modes:
+This feature allows you to clone a repository with two modes, both featuring a **themed progress bar** to show real-time download status:
 
 #### Standard Clone
 
-Perform a full `git clone` of the target repository.
+Perform a full or shallow `git clone` of the target repository. 
+- Usage from CLI: `bimagic -d "repo-url" [--depth <number>]`
 
 #### Interactive Clone (Sparse Checkout)
 

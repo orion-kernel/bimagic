@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="v1.4.3"
+VERSION="v1.4.4"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
     echo "Bimagic Git Wizard $VERSION"
@@ -403,6 +403,7 @@ show_contributor_stats() {
 clone_repo() {
     local url=$1
     local interactive=$2
+    local depth=$3
 
     # Extract repo name from URL (basename, remove .git)
     local repo_name=$(basename "$url" .git)
@@ -412,6 +413,11 @@ clone_repo() {
         return 1
     fi
 
+    local depth_arg=""
+    if [[ -n "$depth" ]]; then
+        depth_arg="--depth $depth"
+    fi
+
     if [[ "$interactive" == "true" ]]; then
         print_status "Initializing interactive clone for $repo_name..."
 
@@ -419,7 +425,7 @@ clone_repo() {
         print_status "Cloning structure for $repo_name..."
         (
             set -o pipefail
-            git clone --progress --filter=blob:none --no-checkout "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
+            git clone --progress --filter=blob:none --no-checkout $depth_arg "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
                 if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
                     draw_progress_bar "Receiving Structure" "${BASH_REMATCH[1]}"
                 elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
@@ -484,7 +490,7 @@ clone_repo() {
         # Use a subshell with pipefail to catch git clone errors
         (
             set -o pipefail
-            git clone --progress "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
+            git clone --progress $depth_arg "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
                 if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
                     draw_progress_bar "Receiving Objects" "${BASH_REMATCH[1]}"
                 elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
@@ -649,6 +655,7 @@ CLI_MODE=""
 CLI_URL=""
 CLI_MSG=""
 CLI_INTERACTIVE="false"
+CLI_DEPTH=""
 
 # Preserve args in a loop
 while [[ $# -gt 0 ]]; do
@@ -656,6 +663,10 @@ while [[ $# -gt 0 ]]; do
     -d)
         CLI_MODE="clone"
         shift
+        ;;
+    --depth)
+        CLI_DEPTH="$2"
+        shift 2
         ;;
     -i)
         CLI_INTERACTIVE="true"
@@ -700,9 +711,10 @@ if [[ "$CLI_MODE" == "clone" ]]; then
         print_error "Error: Repository URL required with -d"
         exit 1
     fi
-    clone_repo "$CLI_URL" "$CLI_INTERACTIVE"
-    exit $?
+    clone_repo "$CLI_URL" "$CLI_INTERACTIVE" "$CLI_DEPTH"
+    exit 0
 fi
+
 
 if [[ "$CLI_MODE" == "status" ]]; then
     show_repo_status
@@ -905,12 +917,14 @@ while true; do
         repo_url=$(gum input --placeholder "Enter repository URL")
         if [[ -z "$repo_url" ]]; then continue; fi
 
+        repo_depth=$(gum input --placeholder "Enter depth (empty for full clone)")
+
         clone_mode=$(gum choose "Standard Clone" "Interactive (Select files)")
 
         if [[ "$clone_mode" == "Interactive (Select files)" ]]; then
-            clone_repo "$repo_url" "true"
+            clone_repo "$repo_url" "true" "$repo_depth"
         else
-            clone_repo "$repo_url" "false"
+            clone_repo "$repo_url" "false" "$repo_depth"
         fi
         ;;
     "󰓗 Stash operations")
