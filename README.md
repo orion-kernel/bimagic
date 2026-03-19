@@ -454,6 +454,12 @@ The `Remove files/folders (rm)` option lets you select files and folders interac
 
 Usage from CLI: `bimagic -a` or `bimagic --architect`
 
+### Pull latest changes (Option 6)
+
+Fetch all updates from remotes and pull the latest changes from all branches.
+
+Usage from CLI: `bimagic -p`
+
 ### Merge branches (Option 14)
 
 Merge another branch into your current branch using an interactive selector. If conflicts occur, you will be notified to resolve them manually.

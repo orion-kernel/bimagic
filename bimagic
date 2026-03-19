@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="v1.4.5"
+VERSION="v1.4.6"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
     echo "Bimagic Git Wizard $VERSION"
@@ -713,6 +713,10 @@ while [[ $# -gt 0 ]]; do
         CLI_MODE="graph"
         shift
         ;;
+    -p)
+        CLI_MODE="pull"
+        shift
+        ;;
     -a | --architect)
         CLI_MODE="architect"
         shift
@@ -743,6 +747,29 @@ fi
 
 if [[ "$CLI_MODE" == "status" ]]; then
     show_repo_status
+    exit 0
+fi
+
+if [[ "$CLI_MODE" == "pull" ]]; then
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+        print_error "Not a git repository!"
+        exit 1
+    fi
+
+    # 1. Fetch
+    if gum spin --title "Fetching updates..." -- git fetch --all; then
+        print_status "Fetch complete."
+    else
+        print_warning "Fetch encountered issues during fetch."
+    fi
+
+    # 2. Pull
+    if gum spin --title "Pulling all..." -- git pull --all; then
+        print_status "Pull all complete."
+    else
+        print_error "Pull failed. There might be conflicts or no upstream set."
+        exit 1
+    fi
     exit 0
 fi
 
