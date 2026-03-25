@@ -902,6 +902,55 @@ fi
 CONFIG_DIR="$HOME/.config/bimagic"
 VERSION_FILE="$CONFIG_DIR/version"
 
+resurrect_commit() {
+    print_status "🪨  Summoning the Resurrection Stone..."
+
+    # Check if reflog has entries
+    if [[ -z "$(git reflog 2>/dev/null)" ]]; then
+        print_error "The ancient logs are empty. Nothing to resurrect."
+        return 1
+    fi
+
+    echo "Search the ancient timelines for your lost code:"
+    # Use gum filter to search through the entire reflog
+    local selected_log=$(git reflog --date=relative --format="%h %gd %C(blue)%ad%Creset %s" | gum filter --placeholder "Search for a lost commit message or hash...")
+
+    if [[ -z "$selected_log" ]]; then
+        print_status "Resurrection cancelled."
+        return 0
+    fi
+
+    # Extract the hash (the first word)
+    local target_hash=$(echo "$selected_log" | awk '{print $1}')
+
+    echo
+    gum style --border rounded --border-foreground "$BIMAGIC_PRIMARY" --padding "1 2" \
+        "TARGET TIMELINE:" "$selected_log"
+    echo
+
+    # Give the user options on how to resurrect
+    local action=$(gum choose "🌿 Create a new branch here (Safest)" "⚠️  Hard Reset current branch to here (Dangerous)" "Cancel")
+
+    case "$action" in
+    "🌿 Create a new branch here (Safest)")
+        local new_branch=$(gum input --placeholder "Enter new branch name (e.g., recovered-code)")
+        if [[ -n "$new_branch" ]]; then
+            git checkout -b "$new_branch" "$target_hash"
+            print_status "✨ Timeline restored! You are now on branch: $new_branch"
+        fi
+        ;;
+    "⚠️  Hard Reset current branch to here (Dangerous)")
+        if gum confirm "This will overwrite your CURRENT work. Are you absolutely sure?"; then
+            git reset --hard "$target_hash"
+            print_status "💥 Timeline overwritten. Welcome back."
+        fi
+        ;;
+    *)
+        print_status "The stone goes dormant."
+        ;;
+    esac
+}
+
 show_welcome_banner() {
     clear
     echo -e "$(get_ansi_esc "$BANNER_COLOR_1")▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
@@ -958,6 +1007,7 @@ while true; do
             "󰮘 Remove files/folders (rm)" \
             " Merge branches" \
             " Uninitialize repo" \
+            "🪨 Summon the Resurrection Stone (Recover lost code)" \
             "󰁯 Revert commit(s)" \
             "󰓗 Stash operations" \
             "󰿅 Exit"
@@ -1364,6 +1414,10 @@ while true; do
 
     "󰓗 Summon the Architect (.gitignore)")
         summon_gitignore
+        ;;
+
+    "🪨 Summon the Resurrection Stone (Recover lost code)")
+        resurrect_commit
         ;;
 
     "󰁯 Revert commit(s)")
