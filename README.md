@@ -38,6 +38,7 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 - 📜 The Architect (.gitignore generator)
 - 🔀 Merge branches with conflict detection
 - ⏪ Revert commit(s) with multi-select
+- 🪨 Resurrection Stone (Recover lost commits/branches from reflog)
 - 🎨 Theme Customization (ANSI and Hex color support)
 - ⏳ Time Turner (Undo last commit)
 - 🗃️ Stash operations (Push, Pop, List, Apply, Drop, Clear)
@@ -367,9 +368,10 @@ At the top of the interface, a status box summarizes:
 13. **Summon the Architect (.gitignore)** - Interactive .gitignore generator with 70+ blueprints
 14. **Merge branches** - Merge a selected branch into the current one
 15. **Uninitialize repo** – Remove Git tracking from a project
-16. **Revert commit(s)** - Revert one or more commits (multi-select)
-17. **Stash operations** - Manage stashes (push, pop, list, apply, drop, clear)
-18. **Exit** - Quit the wizard
+16. **Summon the Resurrection Stone (Recover lost code)** - Recover deleted commits or branches using Git reflog
+17. **Revert commit(s)** - Revert one or more commits (multi-select)
+18. **Stash operations** - Manage stashes (push, pop, list, apply, drop, clear)
+19. **Exit** - Quit the wizard
 
 ### Clone repository (Option 1)
 
@@ -470,7 +472,23 @@ Merge another branch into your current branch using an interactive selector. If 
 2. Select a branch (other than current) to merge into the current one
 3. If merge succeeds, you get a success message; otherwise, conflicts are reported
 
-### Revert commit(s) (Option 16)
+### Resurrection Stone (Option 16)
+
+The "Resurrection Stone" allows you to recover work that you thought was lost forever. Git keeps a hidden history called the **reflog** for about 30 days, even for commits that are no longer part of any branch.
+
+#### Features:
+
+- **Reflog GUI**: Search through your hidden Git history with an interactive filter.
+- **Safe Recovery**: Restore any lost commit into a brand-new branch.
+- **Emergency Reset**: Instantly hard-reset your current branch to a previous state if you made a catastrophic mistake.
+
+#### How to use:
+
+1. Select **🪨 Summon the Resurrection Stone**.
+2. Search for the commit you lost (by message or hash).
+3. Choose whether to create a new branch at that point or hard-reset your current branch.
+
+### Revert commit(s) (Option 17)
 
 #### Safety Features:
 
@@ -512,7 +530,7 @@ Cancels the commit and **unstages** the files. Best for when you want to split w
 - **Scenario:** You want to trash the last commit completely.
 - **Result:** Everything from that commit is gone forever. **Use with caution!**
 
-### Stash operations (Option 16)
+### Stash operations (Option 18)
 
 Manage your git stashes with a comprehensive menu.
 

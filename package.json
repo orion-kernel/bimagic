@@ -1,6 +1,6 @@
 {
   "name": "bimagic",
-  "version": "1.4.6",
+  "version": "1.5.0",
   "description": "A powerful Bash-based Git automation tool that simplifies your GitHub workflow.",
   "bin": {
     "bimagic": "./bimagic",
