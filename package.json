@@ -31,7 +31,5 @@
     "url": "https://github.com/orion-kernel/bimagic/issues"
   },
   "homepage": "https://github.com/orion-kernel/bimagic#readme",
-  "dependencies": {
-    "bimagic": "^1.4.4"
-  }
+  "dependencies": {}
 }
