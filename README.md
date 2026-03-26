@@ -1,7 +1,7 @@
 # Bimagic - Git Wizard
 
 <p align="center">
-  <img width="400" style="border-radius: 12px;" alt="Image" src="https://github.com/user-attachments/assets/d74de26d-949b-4aa9-9b2e-c25de5b25b42" />
+  <img width="400" style="border-radius: 12px;" alt="Image" src="./Sample/logo.png" />
 </p>
 
 <p align="center">By Bimbok and adityapaul26</p>
