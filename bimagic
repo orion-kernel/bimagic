@@ -485,14 +485,8 @@ clone_repo() {
     # FIX: Add --no-cone so Git accepts individual file paths
     gum spin --title "Configuring sparse checkout..." -- git sparse-checkout init --no-cone
 
-    # We use 'set' with the selected paths.
-    # Note: --cone mode works best with directories, but for specific files we might rely on the fact
-    # that sparse-checkout patterns handle full paths.
-    # However, 'git sparse-checkout set' treats arguments as patterns.
-    # We turn off cone for precise file selection transparency if needed, but standard 'set' often works.
-    # To be safe for exact file paths, we simply pass them.
-    # If the list is huge, this might fail on command line length.
-    # Ideally we pipe to 'git sparse-checkout set --stdin', but gum returns newline separated.
+    # Set the selected paths
+    echo "$selected_paths" | git sparse-checkout set --stdin
 
     print_status "Downloading selected files..."
     (
