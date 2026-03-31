@@ -984,6 +984,7 @@ scrying_glass() {
     fi
 
     # 1. Use fzf for interactive selection with side-by-side preview
+    # Map fzf colors to our theme variables
     local file=$(git ls-files --cached --others --exclude-standard |
       fzf --preview "$preview_cmd" \
         --preview-window=right:60% \
@@ -991,7 +992,7 @@ scrying_glass() {
         --layout=reverse \
         --border \
         --prompt="󰈈 Peer into: " \
-        --color="bg+:-1,fg+:212,hl:51,hl+:51,prompt:39,pointer:212,marker:46,header:99")
+        --color="bg+:-1,fg+:$BIMAGIC_PRIMARY,hl:$BIMAGIC_SECONDARY,hl+:$BIMAGIC_SECONDARY,prompt:$BIMAGIC_INFO,pointer:$BIMAGIC_PRIMARY,marker:$BIMAGIC_SUCCESS,header:$BIMAGIC_PRIMARY,spinner:$BIMAGIC_PRIMARY,info:$BIMAGIC_MUTED")
 
     if [[ -z "$file" ]]; then
       print_status "The glass goes dark (Cancelled)."
