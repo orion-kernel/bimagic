@@ -86,6 +86,35 @@ else
   status_success "gum is ready."
 fi
 
+# Check for optional bat dependency
+if ! command -v bat &>/dev/null; then
+  status_info "bat is not installed. Bimagic uses it for syntax highlighting in The Scrying Glass."
+  echo -e -n "   ${BOLD}Do you want to automatically install bat? (y/N): ${NC}"
+  read -r auto_install_bat
+  auto_install_bat=${auto_install_bat:-N}
+
+  if [[ $auto_install_bat =~ ^[Yy]$ ]]; then
+    status_info "Installing bat..."
+    if [ -n "$TERMUX_VERSION" ] && command -v pkg &>/dev/null; then
+      pkg install -y bat
+    elif command -v brew &>/dev/null; then
+      brew install bat
+    elif command -v apt &>/dev/null; then
+      sudo apt update && sudo apt install -y bat
+    elif command -v pacman &>/dev/null; then
+      sudo pacman -S --noconfirm bat
+    elif command -v nix-env &>/dev/null; then
+      nix-env -iA nixpkgs.bat
+    else
+      status_warn "Could not install bat automatically. You can install it manually for a better experience."
+    fi
+  else
+    status_info "Skipping bat installation. Bimagic will work without it."
+  fi
+else
+  status_success "bat is ready (optional)."
+fi
+
 # Locate the bimagic script
 if [ -f "./bimagic" ]; then
   status_info "Using local bimagic script..."

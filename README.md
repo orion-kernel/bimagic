@@ -42,6 +42,8 @@ Bimagic is an interactive command-line tool that streamlines common Git operatio
 - 🎨 Theme Customization (ANSI and Hex color support)
 - ⏳ Time Turner (Undo last commit)
 - 🗃️ Stash operations (Push, Pop, List, Apply, Drop, Clear)
+- 🔍 The Scrying Glass (Quick file preview with optional syntax highlighting)
+- ⚡ Command Transparency (Displays the exact Git command being executed)
 
 ## Installation
 
@@ -153,6 +155,7 @@ export PATH="$HOME/bin:$PATH"  # For user-local installation
   - If not installed, the tool will not work.
 - Node.js **v16 or higher**
 - npm **v8+**
+- [bat](https://github.com/sharkdp/bat) (optional; used for syntax highlighting in The Scrying Glass)
 
 ## Configuration
 
@@ -371,7 +374,8 @@ At the top of the interface, a status box summarizes:
 16. **Summon the Resurrection Stone (Recover lost code)** - Recover deleted commits or branches using Git reflog
 17. **Revert commit(s)** - Revert one or more commits (multi-select)
 18. **Stash operations** - Manage stashes (push, pop, list, apply, drop, clear)
-19. **Exit** - Quit the wizard
+19. **The Scrying Glass (Quick View)** - Browse and preview any file in the repository instantly
+20. **Exit** - Quit the wizard
 
 ### Clone repository (Option 1)
 
@@ -542,6 +546,21 @@ Manage your git stashes with a comprehensive menu.
 - **Apply**: Apply a specific stash without removing it
 - **Drop**: Delete a specific stash
 - **Clear**: Remove all stashes (with safety confirmation)
+
+### The Scrying Glass (Option 19)
+
+"The Scrying Glass" provides an instant, scrollable preview of any file in your repository—whether it's tracked by Git or just a new, untracked file.
+
+#### Features:
+
+- **Instant Selection**: Quickly find files using an interactive filter.
+- **Scrollable Pager**: Uses `gum pager` for smooth reading of long files.
+- **Magic Highlight**: If `bat` is installed, it automatically provides syntax highlighting for a superior viewing experience.
+- **Deep Integration**: Access it standalone from the main menu, or use it while adding/removing files to ensure you're acting on the right code.
+
+### Command Transparency ⚡
+
+Bimagic now shows you exactly what "spells" are being cast. Every time you perform a Git action through the wizard, the exact Git command is displayed in a vibrant, easy-to-read format. This ensures transparency, helps you learn Git commands, and provides confidence that the tool is doing exactly what you expect.
 
 ## Why Sudo Might Be Required
 
