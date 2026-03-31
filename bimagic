@@ -118,6 +118,11 @@ play_sound() {
     ;;
   esac
 }
+
+print_command() {
+  echo -e "${GRAY} Command: ${BLUE}$*${NC}"
+}
+
 print_status() {
   gum style --foreground "$BIMAGIC_PRIMARY" "$1"
   play_sound "success"
@@ -185,7 +190,9 @@ setup_remote() {
   fi
 
   if gum confirm "Set remote '$remote_name' to $remote_url?"; then
+    print_command "git remote remove \"$remote_name\""
     git remote remove "$remote_name" 2>/dev/null
+    print_command "git remote add \"$remote_name\" \"$remote_url\""
     git remote add "$remote_name" "$remote_url"
     print_status " Remote '$remote_name' set to $remote_url"
     return 0
@@ -447,6 +454,7 @@ clone_repo() {
     print_status "Initializing interactive clone for $repo_name..."
 
     # 1. Clone with --no-checkout and --filter=blob:none (downloads commits/trees, no file contents)
+    print_command "git clone --filter=blob:none --no-checkout $depth_arg \"$url\" \"$repo_name\""
     print_status "Cloning structure for $repo_name..."
     (
       set -o pipefail
@@ -504,6 +512,7 @@ clone_repo() {
 
   else
     # Standard clone with progress bar
+    print_command "git clone $depth_arg \"$url\" \"$repo_name\""
     print_status "Cloning $url into $repo_name..."
 
     # Use a subshell with pipefail to catch git clone errors
@@ -573,6 +582,7 @@ summon_gitignore() {
 
   local url="https://raw.githubusercontent.com/github/gitignore/main/${template}.gitignore"
 
+  print_command "curl -sL \"$url\" -o .gitignore"
   if gum spin --title "Fetching template..." -- curl -sL "$url" -o .gitignore; then
     # Verify the file is not empty (curl might return 404 text if URL is wrong)
     if grep -q "404: Not Found" .gitignore; then
@@ -647,6 +657,7 @@ ${body}"
   echo
 
   if gum confirm "Commit with this message?"; then
+    print_command "git commit -m \"$commit_msg\""
     git commit -m "$commit_msg"
     print_status "󱝁 Mischief managed! (Commit successful)"
   else
@@ -656,6 +667,7 @@ ${body}"
 
 #function to display git graph
 pretty_git_log() {
+  print_command "git log --graph --oneline --decorate --all"
   git log --graph \
     --abbrev-commit \
     --decorate \
@@ -750,6 +762,7 @@ if [[ "$CLI_MODE" == "pull" ]]; then
   fi
 
   # 1. Fetch
+  print_command "git fetch --all"
   if gum spin --title "Fetching updates..." -- git fetch --all; then
     print_status "Fetch complete."
   else
@@ -757,11 +770,11 @@ if [[ "$CLI_MODE" == "pull" ]]; then
   fi
 
   # 2. Pull
+  print_command "git pull --all"
   if gum spin --title "Pulling all..." -- git pull --all; then
     print_status "Pull all complete."
   else
     print_error "Pull failed. There might be conflicts or no upstream set."
-    exit 1
   fi
   exit 0
 fi
@@ -806,17 +819,22 @@ if [[ "$CLI_MODE" == "undo" ]]; then
   case "$undo_type" in
   "Soft"*)
     if [[ "$is_initial_commit" == "true" ]]; then
+      print_command "git update-ref -d HEAD"
       git update-ref -d HEAD
     else
+      print_command "git reset --soft HEAD~1"
       git reset --soft HEAD~1
     fi
     print_status "✨ Success! I undid the commit, but kept your files ready to commit again."
     ;;
   "Mixed"*)
     if [[ "$is_initial_commit" == "true" ]]; then
+      print_command "git update-ref -d HEAD"
       git update-ref -d HEAD
+      print_command "git rm --cached -r -q ."
       git rm --cached -r -q .
     else
+      print_command "git reset HEAD~1"
       git reset HEAD~1
     fi
     print_status "󱞈 Success! I undid the commit and unstaged the files."
@@ -825,10 +843,14 @@ if [[ "$CLI_MODE" == "undo" ]]; then
     if gum confirm " DANGER: This deletes your work forever. Are you sure?"; then
       if [[ "$is_initial_commit" == "true" ]]; then
         # Unstage everything first, then clean to ensure files are deleted
+        print_command "git update-ref -d HEAD"
         git update-ref -d HEAD
+        print_command "git rm --cached -r -q ."
         git rm --cached -r -q . >/dev/null 2>&1
+        print_command "git clean -fd"
         git clean -fd
       else
+        print_command "git reset --hard HEAD~1"
         git reset --hard HEAD~1
       fi
       print_status "󱠇 Obliviate! The last commit and its changes are destroyed."
@@ -858,6 +880,7 @@ if [[ "$CLI_MODE" == "lazy" ]]; then
   print_status "  Lazy Wizard invoked!"
 
   # 1. Add all changes
+  print_command "git add ."
   if gum spin --title "Adding files..." -- git add .; then
     print_status "Files added."
   else
@@ -866,6 +889,7 @@ if [[ "$CLI_MODE" == "lazy" ]]; then
   fi
 
   # 2. Commit
+  print_command "git commit -m \"$CLI_MSG\""
   if git commit -m "$CLI_MSG"; then
     print_status "Committed: $CLI_MSG"
   else
@@ -877,11 +901,13 @@ if [[ "$CLI_MODE" == "lazy" ]]; then
   branch=$(get_current_branch)
   print_status "Pushing to $branch..."
 
+  print_command "git push"
   if gum spin --title "Pushing..." -- git push; then
     print_status "󱝂 Magic complete!"
   else
     # Try setting upstream if standard push failed
     print_warning "Standard push failed. Trying to set upstream..."
+    print_command "git push -u origin \"$branch\""
     if gum spin --title "Pushing (upstream)..." -- git push -u origin "$branch"; then
       print_status "󱝂 Magic complete (upstream set)!"
     else
@@ -928,15 +954,18 @@ resurrect_commit() {
   "󰔱 Create a new branch here (Safest)")
     local new_branch=$(gum input --placeholder "Enter new branch name (e.g., recovered-code)")
     if [[ -n "$new_branch" ]]; then
+      print_command "git checkout -b \"$new_branch\" \"$target_hash\""
       git checkout -b "$new_branch" "$target_hash"
       print_status "󱝁 Timeline restored! You are now on branch: $new_branch"
     fi
     ;;
-  "  Hard Reset current branch to here (Dangerous)")
+    "  Hard Reset current branch to here (Dangerous)")
     if gum confirm "This will overwrite your CURRENT work. Are you absolutely sure?"; then
+      print_command "git reset --hard $target_hash"
       git reset --hard "$target_hash"
-      print_status " Timeline overwritten. Welcome back."
+      print_status "󱝁 Timeline restored via hard reset!"
     fi
+
     ;;
   *)
     print_status "The stone goes dormant."
@@ -1043,6 +1072,7 @@ while true; do
           include_untracked=""
         fi
 
+        print_command "git stash push $include_untracked -m \"$msg\""
         if git stash push $include_untracked -m "$msg"; then
           print_status "Changes stashed successfully!"
         else
@@ -1050,6 +1080,7 @@ while true; do
         fi
         ;;
       "󱉙 Pop latest stash")
+        print_command "git stash pop"
         if git stash pop; then
           print_status "Stash popped successfully!"
         else
@@ -1072,6 +1103,7 @@ while true; do
         stash_entry=$(git stash list | gum filter --placeholder "Select stash to apply")
         if [[ -n "$stash_entry" ]]; then
           stash_id=$(echo "$stash_entry" | cut -d: -f1)
+          print_command "git stash apply $stash_id"
           if git stash apply "$stash_id"; then
             print_status "Applied $stash_id"
           else
@@ -1089,6 +1121,7 @@ while true; do
         if [[ -n "$stash_entry" ]]; then
           stash_id=$(echo "$stash_entry" | cut -d: -f1)
           if gum confirm "Are you sure you want to drop $stash_id?"; then
+            print_command "git stash drop $stash_id"
             if git stash drop "$stash_id"; then
               print_status "Dropped $stash_id"
             else
@@ -1104,6 +1137,7 @@ while true; do
         fi
 
         if gum confirm "DANGER: This will delete ALL stashes. Continue?"; then
+          print_command "git stash clear"
           if git stash clear; then
             print_status "All stashes cleared."
           else
@@ -1130,6 +1164,7 @@ while true; do
     fi
 
     if [[ "$dirname" == "." ]]; then
+      print_command "git init"
       git init
       print_status "Repo initialized in current directory: $(pwd)"
     else
@@ -1137,9 +1172,11 @@ while true; do
       # Run init and rename in a subshell to avoid directory tracking issues
       (
         cd "$dirname" || exit 1
+        print_command "git init"
         git init
         current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
         if [[ "$current_branch" == "master" ]]; then
+          print_command "git branch -M main"
           git branch -M main
           echo "Default branch renamed from 'master' to 'main' in $dirname"
         fi
@@ -1160,12 +1197,16 @@ while true; do
       # gum filter returns selected items separated by newlines.
       # We need to handle the case where [ALL] is selected along with other files.
       if echo "$files" | grep -q "\[ALL\]"; then
+        print_command "git add ."
         git add .
         print_status "All files staged."
       else
         # Correctly handle filenames with spaces by reading line by line
         echo "$files" | while read -r f; do
-          [[ -n "$f" ]] && git add "$f"
+          if [[ -n "$f" ]]; then
+            print_command "git add \"$f\""
+            git add "$f"
+          fi
         done
         print_status "Selected files staged."
         # Optionally, list the files that were staged
@@ -1186,6 +1227,7 @@ while true; do
       fi
 
       if gum confirm "Commit changes?"; then
+        print_command "git commit -m \"$msg\""
         git commit -m "$msg"
         print_status "Commit done!"
       else
@@ -1219,6 +1261,7 @@ while true; do
 
     if gum confirm "Push branch '$branch' to '$remote'?"; then
       echo "Pushing branch '$branch' to '$remote'..."
+      print_command "git push -u \"$remote\" \"$branch\""
       gum spin --title "Pushing..." -- git push -u "$remote" "$branch"
     else
       print_status "Push cancelled."
@@ -1239,6 +1282,7 @@ while true; do
     case "$pull_choice" in
     "Pull all")
       if gum confirm "Run 'git pull --all'?"; then
+        print_command "git pull --all"
         gum spin --title "Pulling all..." -- git pull --all
         print_status "Pull all complete."
       else
@@ -1262,6 +1306,7 @@ while true; do
 
         if [[ -n "$remote" ]]; then
           if gum confirm "Pull branch '$branch' from '$remote'?"; then
+            print_command "git pull \"$remote\" \"$branch\""
             gum spin --title "Pulling..." -- git pull "$remote" "$branch"
           else
             print_status "Pull cancelled."
@@ -1290,6 +1335,7 @@ while true; do
       # Use gum filter to select from existing branches
       existing_branch=$(git branch --format='%(refname:short)' | gum filter --placeholder "Select branch to switch to")
       if [[ -n "$existing_branch" ]]; then
+        print_command "git checkout \"$existing_branch\""
         git checkout "$existing_branch"
         print_status "Switched to branch: $existing_branch"
       else
@@ -1299,6 +1345,7 @@ while true; do
     "Create new branch")
       new_branch=$(gum input --placeholder "Enter new branch name")
       if [[ -n "$new_branch" ]]; then
+        print_command "git checkout -b \"$new_branch\""
         git checkout -b "$new_branch"
         print_status "Created and switched to new branch: $new_branch"
       else
@@ -1341,9 +1388,11 @@ while true; do
         # Check if the file is tracked by git
         if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
           # It's a tracked file, use 'git rm'
+          print_command "git rm -rf \"$f\""
           git rm -rf "$f"
         else
           # It's an untracked file, use 'rm'
+          print_command "rm -rf \"$f\""
           rm -rf "$f"
         fi
       done
@@ -1359,6 +1408,7 @@ while true; do
 
     if gum confirm "Are you sure you want to continue?"; then
       if [ -d ".git" ]; then
+        print_command "rm -rf .git"
         rm -rf .git
         print_status "Git repository has been uninitialized."
       else
@@ -1391,6 +1441,7 @@ while true; do
     else
       if gum confirm "Merge branch '$merge_branch' into '$current_branch'?"; then
         echo "Merging branch '$merge_branch' into '$current_branch'..."
+        print_command "git merge \"$merge_branch\""
         if gum spin --title "Merging..." -- git merge "$merge_branch"; then
           print_status "Merge successful!"
         else
@@ -1434,6 +1485,7 @@ while true; do
     if gum confirm "Confirm revert?"; then
       for c in $commits; do
         echo "Reverting commit $c..."
+        print_command "git revert --no-edit $c"
         if git revert --no-edit "$c"; then
           print_status "Commit $c reverted."
         else
