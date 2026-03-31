@@ -976,21 +976,54 @@ resurrect_commit() {
 scrying_glass() {
   print_status "󰈈 Summoning the Scrying Glass..."
 
-  # 1. Select the file using your existing filter style
-  local file=$(git ls-files --cached --others --exclude-standard |
-    gum filter --placeholder "Select a file to peer into...")
+  # Check if fzf is installed for the side-by-side preview experience
+  if command -v fzf &>/dev/null; then
+    local preview_cmd="cat {}"
+    if command -v bat &>/dev/null; then
+      preview_cmd="bat --color=always --style=numbers {}"
+    fi
 
-  if [[ -z "$file" ]]; then
-    print_status "The glass goes dark (Cancelled)."
-    return 0
-  fi
+    # 1. Use fzf for interactive selection with side-by-side preview
+    local file=$(git ls-files --cached --others --exclude-standard |
+      fzf --preview "$preview_cmd" \
+        --preview-window=right:60% \
+        --height=80% \
+        --layout=reverse \
+        --border \
+        --prompt="󰈈 Peer into: " \
+        --color="bg+:-1,fg+:212,hl:51,hl+:51,prompt:39,pointer:212,marker:46,header:99")
 
-  # 2. Check for syntax highlighting capability
-  print_status "Peering into: $file"
-  if command -v bat &>/dev/null; then
-    bat --color=always "$file" | gum pager
+    if [[ -z "$file" ]]; then
+      print_status "The glass goes dark (Cancelled)."
+      return 0
+    fi
+
+    # After selection, we can optionally open it in a full pager if they want to read the whole thing
+    if gum confirm "Open in full pager?"; then
+      if command -v bat &>/dev/null; then
+        bat --color=always "$file" | gum pager
+      else
+        gum pager <"$file"
+      fi
+    fi
   else
-    gum pager <"$file"
+    # Fallback to standard gum behavior if fzf is missing
+    # 1. Select the file using existing filter style
+    local file=$(git ls-files --cached --others --exclude-standard |
+      gum filter --placeholder "Select a file to peer into...")
+
+    if [[ -z "$file" ]]; then
+      print_status "The glass goes dark (Cancelled)."
+      return 0
+    fi
+
+    # 2. Check for syntax highlighting capability
+    print_status "Peering into: $file"
+    if command -v bat &>/dev/null; then
+      bat --color=always "$file" | gum pager
+    else
+      gum pager <"$file"
+    fi
   fi
 }
 

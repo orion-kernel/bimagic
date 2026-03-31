@@ -115,6 +115,35 @@ else
   status_success "bat is ready (optional)."
 fi
 
+# Check for optional fzf dependency (for Scrying Glass side-by-side preview)
+if ! command -v fzf &>/dev/null; then
+  status_info "fzf is not installed. Bimagic uses it for side-by-side preview in The Scrying Glass."
+  echo -e -n "   ${BOLD}Do you want to automatically install fzf? (y/N): ${NC}"
+  read -r auto_install_fzf
+  auto_install_fzf=${auto_install_fzf:-N}
+
+  if [[ $auto_install_fzf =~ ^[Yy]$ ]]; then
+    status_info "Installing fzf..."
+    if [ -n "$TERMUX_VERSION" ] && command -v pkg &>/dev/null; then
+      pkg install -y fzf
+    elif command -v brew &>/dev/null; then
+      brew install fzf
+    elif command -v apt &>/dev/null; then
+      sudo apt update && sudo apt install -y fzf
+    elif command -v pacman &>/dev/null; then
+      sudo pacman -S --noconfirm fzf
+    elif command -v nix-env &>/dev/null; then
+      nix-env -iA nixpkgs.fzf
+    else
+      status_warn "Could not install fzf automatically. You can install it manually for a better experience."
+    fi
+  else
+    status_info "Skipping fzf installation. Bimagic will work without it."
+  fi
+else
+  status_success "fzf is ready (optional)."
+fi
+
 # Locate the bimagic script
 if [ -f "./bimagic" ]; then
   status_info "Using local bimagic script..."
