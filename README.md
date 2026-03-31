@@ -556,6 +556,8 @@ Manage your git stashes with a comprehensive menu.
 
 - **Interactive Selection**: Quickly find files using an interactive filter.
 - **Side-by-Side Preview**: Uses `fzf` (if installed) to provide a real-time preview of the file content while you browse the list.
+- **Circular Selection**: Seamlessly wrap around from the last file to the first with infinite scrolling.
+- **Themed Experience**: Selection and preview interface fully respect your custom `theme.wz` colors.
 - **Scrollable Pager**: Uses `gum pager` for smooth reading of long files after selection.
 - **Magic Highlight**: If `bat` is installed, it automatically provides syntax highlighting for a superior viewing experience.
 - **Deep Integration**: Access it standalone from the main menu, or use it while adding/removing files to ensure you're acting on the right code.
