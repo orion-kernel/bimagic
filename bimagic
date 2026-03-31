@@ -991,6 +991,7 @@ scrying_glass() {
         --height=80% \
         --layout=reverse \
         --border \
+        --cycle \
         --prompt="󰈈 Peer into: " \
         --color="bg+:-1,fg+:$BIMAGIC_PRIMARY,hl:$BIMAGIC_SECONDARY,hl+:$BIMAGIC_SECONDARY,prompt:$BIMAGIC_INFO,pointer:$BIMAGIC_PRIMARY,marker:$BIMAGIC_SUCCESS,header:$BIMAGIC_PRIMARY,spinner:$BIMAGIC_PRIMARY,info:$BIMAGIC_MUTED")
 
