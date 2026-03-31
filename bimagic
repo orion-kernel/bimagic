@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-VERSION="v1.5.1"
+VERSION="v1.6.2"
 
 if [[ "$1" == "--version" || "$1" == "-v" ]]; then
-    echo "Bimagic Git Wizard $VERSION"
-    exit 0
+  echo "Bimagic Git Wizard $VERSION"
+  exit 0
 fi
 
 # Configuration and Theme
@@ -29,20 +29,20 @@ BANNER_COLOR_5="135"
 
 # Load theme if it exists
 if [[ -f "$THEME_FILE" ]]; then
-    source "$THEME_FILE"
+  source "$THEME_FILE"
 fi
 
 # Function to get ANSI escape sequence for echo
 get_ansi_esc() {
-    local color=$1
-    if [[ "$color" =~ ^# ]]; then
-        local r=$(printf "%d" "0x${color:1:2}")
-        local g=$(printf "%d" "0x${color:3:2}")
-        local b=$(printf "%d" "0x${color:5:2}")
-        echo -e "\033[38;2;${r};${g};${b}m"
-    else
-        echo -e "\033[38;5;${color}m"
-    fi
+  local color=$1
+  if [[ "$color" =~ ^# ]]; then
+    local r=$(printf "%d" "0x${color:1:2}")
+    local g=$(printf "%d" "0x${color:3:2}")
+    local b=$(printf "%d" "0x${color:5:2}")
+    echo -e "\033[38;2;${r};${g};${b}m"
+  else
+    echo -e "\033[38;5;${color}m"
+  fi
 }
 
 # Colors for output (using theme)
@@ -57,25 +57,25 @@ NC=$(echo -e "\033[0m") # No Color
 
 # Function to draw a progress bar
 draw_progress_bar() {
-    local label=$1
-    local percent=$2
-    local width=30
-    local filled=$((percent * width / 100))
-    local empty=$((width - filled))
+  local label=$1
+  local percent=$2
+  local width=30
+  local filled=$((percent * width / 100))
+  local empty=$((width - filled))
 
-    local bar=""
-    for ((i = 0; i < filled; i++)); do bar+="█"; done
-    local bg=""
-    for ((i = 0; i < empty; i++)); do bg+="░"; done
+  local bar=""
+  for ((i = 0; i < filled; i++)); do bar+="█"; done
+  local bg=""
+  for ((i = 0; i < empty; i++)); do bg+="░"; done
 
-    printf "\r\e[K${CYAN}%-20s${NC} [${PURPLE}%s${NC}${GRAY}%s${NC}] ${YELLOW}%3d%%${NC}" "$label" "$bar" "$bg" "$percent"
+  printf "\r\e[K${CYAN}%-20s${NC} [${PURPLE}%s${NC}${GRAY}%s${NC}] ${YELLOW}%3d%%${NC}" "$label" "$bar" "$bg" "$percent"
 }
 
 # Ensure gum is installed
 if ! command -v gum &>/dev/null; then
-    echo "Error: gum is not installed."
-    echo "Please install it: https://github.com/charmbracelet/gum"
-    exit 1
+  echo "Error: gum is not installed."
+  echo "Please install it: https://github.com/charmbracelet/gum"
+  exit 1
 fi
 
 echo "Welcome to the Git Wizard! Let's work some magic..."
@@ -83,261 +83,261 @@ echo
 
 # Sound functions
 play_sound() {
-    local sound_type=$1
-    case "$sound_type" in
-    "success")
-        # Pleasant bell sound
-        echo -e "\a" # System bell
-        # Alternative: play a beep sequence
-        for i in {1..2}; do
-            printf "\a"
-            sleep 0.1
-        done
-        ;;
-    "error")
-        # Harsher error sound
-        for i in {1..3}; do
-            printf "\a"
-            sleep 0.05
-        done
-        ;;
-    "warning")
-        # Single warning beep
-        printf "\a"
-        ;;
-    "magic")
-        # Magical sequence for special operations
-        for i in {1..3}; do
-            printf "\a"
-            sleep 0.2
-        done
-        ;;
-    "progress")
-        # Subtle progress indicator
-        printf "\a"
-        ;;
-    esac
+  local sound_type=$1
+  case "$sound_type" in
+  "success")
+    # Pleasant bell sound
+    echo -e "\a" # System bell
+    # Alternative: play a beep sequence
+    for i in {1..2}; do
+      printf "\a"
+      sleep 0.1
+    done
+    ;;
+  "error")
+    # Harsher error sound
+    for i in {1..3}; do
+      printf "\a"
+      sleep 0.05
+    done
+    ;;
+  "warning")
+    # Single warning beep
+    printf "\a"
+    ;;
+  "magic")
+    # Magical sequence for special operations
+    for i in {1..3}; do
+      printf "\a"
+      sleep 0.2
+    done
+    ;;
+  "progress")
+    # Subtle progress indicator
+    printf "\a"
+    ;;
+  esac
 }
 
 print_command() {
-    echo -e "${GRAY} ${PURPLE}Command:${NC} ${WHITE}$*${NC}"
+  echo -e "${GRAY} ${PURPLE}Command:${NC} ${WHITE}$*${NC}"
 }
 
 print_status() {
-    gum style --foreground "$BIMAGIC_PRIMARY" "$1"
-    play_sound "success"
+  gum style --foreground "$BIMAGIC_PRIMARY" "$1"
+  play_sound "success"
 }
 
 print_error() {
-    gum style --foreground "$BIMAGIC_ERROR" "$1"
-    play_sound "error"
+  gum style --foreground "$BIMAGIC_ERROR" "$1"
+  play_sound "error"
 }
 
 print_warning() {
-    gum style --foreground "$BIMAGIC_WARNING" "$1"
-    play_sound "warning"
+  gum style --foreground "$BIMAGIC_WARNING" "$1"
+  play_sound "warning"
 }
 
 # Function to get current branch with color
 get_current_branch() {
-    git branch --show-current 2>/dev/null || echo "main"
+  git branch --show-current 2>/dev/null || echo "main"
 }
 
 # Function to display branches with gum
 show_branches() {
-    local current_branch=$(get_current_branch)
+  local current_branch=$(get_current_branch)
 
-    # Get all branches and highlight current one
-    git branch -a --format='%(refname:short)' |
-        while read -r branch; do
-            if [[ "$branch" == "$current_branch" ]]; then
-                echo -e "${GREEN}➤ $branch${NC} (current)"
-            else
-                echo "  $branch"
-            fi
-        done | sort -u
+  # Get all branches and highlight current one
+  git branch -a --format='%(refname:short)' |
+    while read -r branch; do
+      if [[ "$branch" == "$current_branch" ]]; then
+        echo -e "${GREEN}➤ $branch${NC} (current)"
+      else
+        echo "  $branch"
+      fi
+    done | sort -u
 }
 
 # Function to setup or update a remote
 setup_remote() {
-    local remote_name=${1:-"origin"}
+  local remote_name=${1:-"origin"}
 
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_error "Not a git repository! Initialize it first."
-        return 1
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    print_error "Not a git repository! Initialize it first."
+    return 1
+  fi
+
+  # Ask for protocol
+  local protocol=$(gum choose --header "Select protocol for '$remote_name':" "HTTPS (Token)" "SSH")
+
+  local remote_url=""
+  if [[ "$protocol" == "HTTPS (Token)" ]]; then
+    if [[ -z "$GITHUB_USER" ]] || [[ -z "$GITHUB_TOKEN" ]]; then
+      print_error "GITHUB_USER and GITHUB_TOKEN required for HTTPS!"
+      return 1
     fi
+    local reponame=$(gum input --placeholder "Enter repo name (example: my-repo)")
+    [[ -z "$reponame" ]] && return 1
+    # Ensure it ends with .git consistently
+    reponame="${reponame%.git}.git"
+    remote_url="https://${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${reponame}"
+  elif [[ "$protocol" == "SSH" ]]; then
+    remote_url=$(gum input --placeholder "Enter SSH URL (e.g., git@github.com:user/repo.git)")
+    [[ -z "$remote_url" ]] && return 1
+  else
+    print_warning "No protocol selected."
+    return 1
+  fi
 
-    # Ask for protocol
-    local protocol=$(gum choose --header "Select protocol for '$remote_name':" "HTTPS (Token)" "SSH")
-
-    local remote_url=""
-    if [[ "$protocol" == "HTTPS (Token)" ]]; then
-        if [[ -z "$GITHUB_USER" ]] || [[ -z "$GITHUB_TOKEN" ]]; then
-            print_error "GITHUB_USER and GITHUB_TOKEN required for HTTPS!"
-            return 1
-        fi
-        local reponame=$(gum input --placeholder "Enter repo name (example: my-repo)")
-        [[ -z "$reponame" ]] && return 1
-        # Ensure it ends with .git consistently
-        reponame="${reponame%.git}.git"
-        remote_url="https://${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${reponame}"
-    elif [[ "$protocol" == "SSH" ]]; then
-        remote_url=$(gum input --placeholder "Enter SSH URL (e.g., git@github.com:user/repo.git)")
-        [[ -z "$remote_url" ]] && return 1
-    else
-        print_warning "No protocol selected."
-        return 1
-    fi
-
-    if gum confirm "Set remote '$remote_name' to $remote_url?"; then
-        print_command "git remote remove \"$remote_name\""
-        git remote remove "$remote_name" 2>/dev/null
-        print_command "git remote add \"$remote_name\" \"$remote_url\""
-        git remote add "$remote_name" "$remote_url"
-        print_status " Remote '$remote_name' set to $remote_url"
-        return 0
-    else
-        print_status "Operation cancelled."
-        return 1
-    fi
+  if gum confirm "Set remote '$remote_name' to $remote_url?"; then
+    print_command "git remote remove \"$remote_name\""
+    git remote remove "$remote_name" 2>/dev/null
+    print_command "git remote add \"$remote_name\" \"$remote_url\""
+    git remote add "$remote_name" "$remote_url"
+    print_status " Remote '$remote_name' set to $remote_url"
+    return 0
+  else
+    print_status "Operation cancelled."
+    return 1
+  fi
 }
 
 show_repo_status() {
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_warning "Not inside a git repository!"
-        return
-    fi
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    print_warning "Not inside a git repository!"
+    return
+  fi
 
-    local branch=$(get_current_branch)
+  local branch=$(get_current_branch)
 
-    # Ahead/behind info
-    local upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
-    local ahead behind
-    if [[ -n "$upstream" ]]; then
-        ahead=$(git rev-list --count "$upstream"..HEAD 2>/dev/null)
-        behind=$(git rev-list --count HEAD.."$upstream" 2>/dev/null)
+  # Ahead/behind info
+  local upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
+  local ahead behind
+  if [[ -n "$upstream" ]]; then
+    ahead=$(git rev-list --count "$upstream"..HEAD 2>/dev/null)
+    behind=$(git rev-list --count HEAD.."$upstream" 2>/dev/null)
+  else
+    ahead=0
+    behind=0
+  fi
+
+  # Working tree status
+  local status
+  if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+    if git ls-files -u | grep -q .; then
+      status="🔴 conflicts"
+      color="$BIMAGIC_ERROR"
     else
-        ahead=0
-        behind=0
+      status="🟢 clean"
+      color="$BIMAGIC_SUCCESS"
     fi
+  else
+    status="🟡 uncommitted"
+    color="$BIMAGIC_WARNING"
+  fi
 
-    # Working tree status
-    local status
-    if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
-        if git ls-files -u | grep -q .; then
-            status="🔴 conflicts"
-            color="$BIMAGIC_ERROR"
-        else
-            status="🟢 clean"
-            color="$BIMAGIC_SUCCESS"
-        fi
-    else
-        status="🟡 uncommitted"
-        color="$BIMAGIC_WARNING"
-    fi
-
-    local display_user=${GITHUB_USER:-"SSH/Local"}
-    local content="GITHUB USER: $display_user
+  local display_user=${GITHUB_USER:-"SSH/Local"}
+  local content="GITHUB USER: $display_user
 BRANCH: $branch
 AHEAD: $ahead | BEHIND: $behind
 STATUS: $status"
 
-    echo
-    gum style \
-        --border rounded \
-        --margin "1 0" \
-        --padding "1 2" \
-        --border-foreground "$color" \
-        "$content"
+  echo
+  gum style \
+    --border rounded \
+    --margin "1 0" \
+    --padding "1 2" \
+    --border-foreground "$color" \
+    "$content"
 }
 
 generate_bar() {
-    local percentage=$1
-    local width=20
+  local percentage=$1
+  local width=20
 
-    # Convert float to integer for bar calculation
-    local int_percentage=${percentage%.*}
-    # Safety check for integer conversion
-    if [[ ! "$int_percentage" =~ ^[0-9]+$ ]]; then int_percentage=0; fi
-    [[ $int_percentage -gt 100 ]] && int_percentage=100
+  # Convert float to integer for bar calculation
+  local int_percentage=${percentage%.*}
+  # Safety check for integer conversion
+  if [[ ! "$int_percentage" =~ ^[0-9]+$ ]]; then int_percentage=0; fi
+  [[ $int_percentage -gt 100 ]] && int_percentage=100
 
-    local filled=$((int_percentage * width / 100))
-    local empty=$((width - filled))
+  local filled=$((int_percentage * width / 100))
+  local empty=$((width - filled))
 
-    # Pre-get theme colors for the gradient
-    local c1=$(get_ansi_esc "$BANNER_COLOR_1")
-    local c2=$(get_ansi_esc "$BANNER_COLOR_2")
-    local c3=$(get_ansi_esc "$BANNER_COLOR_3")
-    local c4=$(get_ansi_esc "$BANNER_COLOR_4")
-    local c5=$(get_ansi_esc "$BANNER_COLOR_5")
-    local colors=("$c1" "$c2" "$c3" "$c4" "$c5")
-    local gray=$(get_ansi_esc "$BIMAGIC_MUTED")
+  # Pre-get theme colors for the gradient
+  local c1=$(get_ansi_esc "$BANNER_COLOR_1")
+  local c2=$(get_ansi_esc "$BANNER_COLOR_2")
+  local c3=$(get_ansi_esc "$BANNER_COLOR_3")
+  local c4=$(get_ansi_esc "$BANNER_COLOR_4")
+  local c5=$(get_ansi_esc "$BANNER_COLOR_5")
+  local colors=("$c1" "$c2" "$c3" "$c4" "$c5")
+  local gray=$(get_ansi_esc "$BIMAGIC_MUTED")
 
-    local bar="${gray}[${NC}"
-    for ((i = 0; i < filled; i++)); do
-        local color_idx=$((i * 5 / width))
-        bar+="${colors[$color_idx]}█"
-    done
+  local bar="${gray}[${NC}"
+  for ((i = 0; i < filled; i++)); do
+    local color_idx=$((i * 5 / width))
+    bar+="${colors[$color_idx]}█"
+  done
 
-    bar+="$gray"
-    for ((i = 0; i < empty; i++)); do
-        bar+="░"
-    done
-    bar+="]${NC}"
+  bar+="$gray"
+  for ((i = 0; i < empty; i++)); do
+    bar+="░"
+  done
+  bar+="]${NC}"
 
-    echo -e "$bar"
+  echo -e "$bar"
 }
 
 # Function to get contributor statistics
 show_contributor_stats() {
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_error "Not a git repository!"
-        return 1
-    fi
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    print_error "Not a git repository!"
+    return 1
+  fi
 
-    # Time range selection
-    local time_range=$(gum choose --header "Select time range" \
-        "Last 7 days" \
-        "Last 30 days" \
-        "Last 90 days" \
-        "Last year" \
-        "All time")
+  # Time range selection
+  local time_range=$(gum choose --header "Select time range" \
+    "Last 7 days" \
+    "Last 30 days" \
+    "Last 90 days" \
+    "Last year" \
+    "All time")
 
-    local since=""
-    case "$time_range" in
-    "Last 7 days") since="--since='7 days ago'" ;;
-    "Last 30 days") since="--since='30 days ago'" ;;
-    "Last 90 days") since="--since='3 months ago'" ;;
-    "Last year") since="--since='1 year ago'" ;;
-    "All time") since="" ;;
-    *)
-        print_warning "No time range selected."
-        return 1
-        ;;
-    esac
+  local since=""
+  case "$time_range" in
+  "Last 7 days") since="--since='7 days ago'" ;;
+  "Last 30 days") since="--since='30 days ago'" ;;
+  "Last 90 days") since="--since='3 months ago'" ;;
+  "Last year") since="--since='1 year ago'" ;;
+  "All time") since="" ;;
+  *)
+    print_warning "No time range selected."
+    return 1
+    ;;
+  esac
 
-    print_status "Analyzing contributions ($time_range)..."
-    echo
+  print_status "Analyzing contributions ($time_range)..."
+  echo
 
-    # Temporary file for processing
-    local temp_file=$(mktemp)
+  # Temporary file for processing
+  local temp_file=$(mktemp)
 
-    # Get git log with numstat and format for processing
-    if [[ -n "$since" ]]; then
-        gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'COMMIT|%aN' --numstat $since > $temp_file 2>/dev/null"
-    else
-        gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'COMMIT|%aN' --numstat > $temp_file 2>/dev/null"
-    fi
+  # Get git log with numstat and format for processing
+  if [[ -n "$since" ]]; then
+    gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'COMMIT|%aN' --numstat $since > $temp_file 2>/dev/null"
+  else
+    gum spin --title "Analyzing log..." -- bash -c "git log --pretty=format:'COMMIT|%aN' --numstat > $temp_file 2>/dev/null"
+  fi
 
-    # Check if we got any data
-    if [[ ! -s "$temp_file" ]]; then
-        print_error "No contribution data found for the selected period."
-        rm -f "$temp_file"
-        return 1
-    fi
+  # Check if we got any data
+  if [[ ! -s "$temp_file" ]]; then
+    print_error "No contribution data found for the selected period."
+    rm -f "$temp_file"
+    return 1
+  fi
 
-    # Process the data with awk
-    local stats=$(awk ' 
+  # Process the data with awk
+  local stats=$(awk ' 
     BEGIN {
         total_lines = 0
     }
@@ -372,313 +372,313 @@ show_contributor_stats() {
         }
     }' "$temp_file" | sort -t'|' -k2 -nr)
 
-    rm -f "$temp_file"
+  rm -f "$temp_file"
 
-    if [[ -z "$stats" ]]; then
-        print_error "No contribution data found for the selected period."
-        return 1
+  if [[ -z "$stats" ]]; then
+    print_error "No contribution data found for the selected period."
+    return 1
+  fi
+
+  # Calculate additional metrics
+  local most_active_author=""
+  local most_commits=0
+  local most_productive_author=""
+  local highest_avg=0
+
+  # Display header
+  echo -e "${PURPLE}Contribution Report ($time_range)${NC}"
+  echo "$(printf '─%.0s' $(seq 1 45))"
+
+  # Display each contributor
+  while IFS='|' read -r author lines commits percentage; do
+    # Clean up author name
+    author=$(echo "$author" | sed 's/^ *//;s/ *$//')
+
+    # Generate themed bar
+    local bar=$(generate_bar "$percentage")
+
+    # Display entry with theme colors
+    printf "${BLUE}%-15s${NC} %s ${YELLOW}%5.1f%%${NC} (${CYAN}%d lines${NC})\n" \
+      "$author" "$bar" "$percentage" "$lines"
+
+    # Track most active (most commits)
+    if [[ $commits -gt $most_commits ]]; then
+      most_commits=$commits
+      most_active_author="$author"
     fi
 
-    # Calculate additional metrics
-    local most_active_author=""
-    local most_commits=0
-    local most_productive_author=""
-    local highest_avg=0
-
-    # Display header
-    echo -e "${PURPLE}Contribution Report ($time_range)${NC}"
-    echo "$(printf '─%.0s' $(seq 1 45))"
-
-    # Display each contributor
-    while IFS='|' read -r author lines commits percentage; do
-        # Clean up author name
-        author=$(echo "$author" | sed 's/^ *//;s/ *$//')
-
-        # Generate themed bar
-        local bar=$(generate_bar "$percentage")
-
-        # Display entry with theme colors
-        printf "${BLUE}%-15s${NC} %s ${YELLOW}%5.1f%%${NC} (${CYAN}%d lines${NC})\n" \
-            "$author" "$bar" "$percentage" "$lines"
-
-        # Track most active (most commits)
-        if [[ $commits -gt $most_commits ]]; then
-            most_commits=$commits
-            most_active_author="$author"
-        fi
-
-        # Track most productive (highest average lines per commit)
-        if [[ $commits -gt 0 ]]; then
-            local avg_lines=$((lines / commits))
-            if [[ $avg_lines -gt $highest_avg ]]; then
-                highest_avg=$avg_lines
-                most_productive_author="$author"
-            fi
-        fi
-
-    done <<<"$stats"
-
-    echo
-    echo -e "${CYAN}Highlights:${NC}"
-    if [[ -n "$most_active_author" ]]; then
-        echo -e "${BLUE}Most Active:${NC} ${PURPLE}$most_active_author${NC} (${YELLOW}$most_commits commits${NC})"
-    fi
-    if [[ -n "$most_productive_author" ]]; then
-        echo -e "${BLUE}Most Productive:${NC} ${PURPLE}$most_productive_author${NC} (${YELLOW}$highest_avg lines/commit${NC})"
+    # Track most productive (highest average lines per commit)
+    if [[ $commits -gt 0 ]]; then
+      local avg_lines=$((lines / commits))
+      if [[ $avg_lines -gt $highest_avg ]]; then
+        highest_avg=$avg_lines
+        most_productive_author="$author"
+      fi
     fi
 
-    local total_contributors=$(echo "$stats" | wc -l)
-    echo -e "${BLUE}Total Contributors:${NC} ${YELLOW}$total_contributors${NC}"
+  done <<<"$stats"
+
+  echo
+  echo -e "${CYAN}Highlights:${NC}"
+  if [[ -n "$most_active_author" ]]; then
+    echo -e "${BLUE}Most Active:${NC} ${PURPLE}$most_active_author${NC} (${YELLOW}$most_commits commits${NC})"
+  fi
+  if [[ -n "$most_productive_author" ]]; then
+    echo -e "${BLUE}Most Productive:${NC} ${PURPLE}$most_productive_author${NC} (${YELLOW}$highest_avg lines/commit${NC})"
+  fi
+
+  local total_contributors=$(echo "$stats" | wc -l)
+  echo -e "${BLUE}Total Contributors:${NC} ${YELLOW}$total_contributors${NC}"
 }
 
 # Function to clone a repository (Standard or Interactive)
 clone_repo() {
-    local url=$1
-    local interactive=$2
-    local depth=$3
+  local url=$1
+  local interactive=$2
+  local depth=$3
 
-    # Extract repo name from URL (basename, remove .git)
-    local repo_name=$(basename "$url" .git)
+  # Extract repo name from URL (basename, remove .git)
+  local repo_name=$(basename "$url" .git)
 
-    if [[ -d "$repo_name" ]]; then
-        print_error "Directory '$repo_name' already exists."
-        return 1
+  if [[ -d "$repo_name" ]]; then
+    print_error "Directory '$repo_name' already exists."
+    return 1
+  fi
+
+  local depth_arg=""
+  if [[ -n "$depth" ]]; then
+    depth_arg="--depth $depth"
+  fi
+
+  if [[ "$interactive" == "true" ]]; then
+    print_status "Initializing interactive clone for $repo_name..."
+
+    # 1. Clone with --no-checkout and --filter=blob:none (downloads commits/trees, no file contents)
+    print_command "git clone --filter=blob:none --no-checkout $depth_arg \"$url\" \"$repo_name\""
+    print_status "Cloning structure for $repo_name..."
+    (
+      set -o pipefail
+      git clone --progress --filter=blob:none --no-checkout $depth_arg "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
+        if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
+          draw_progress_bar "Receiving Structure" "${BASH_REMATCH[1]}"
+        elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
+          draw_progress_bar "Resolving Deltas" "${BASH_REMATCH[1]}"
+        fi
+      done
+    )
+    local status=$?
+    echo ""
+
+    if [[ $status -ne 0 || ! -d "$repo_name" ]]; then
+      print_error "Clone failed."
+      return 1
     fi
 
-    local depth_arg=""
-    if [[ -n "$depth" ]]; then
-        depth_arg="--depth $depth"
+    pushd "$repo_name" >/dev/null || return 1
+
+    # 2. List all files (from HEAD) and let user select
+    print_status "Fetching file list..."
+    local selected_paths
+    # git ls-tree -r --name-only HEAD lists all files recursively
+    selected_paths=$(git ls-tree -r --name-only HEAD | gum filter --no-limit --placeholder "Select files/folders to download (Space to select)")
+
+    if [[ -z "$selected_paths" ]]; then
+      print_warning "No files selected. Aborting checkout."
+      popd >/dev/null
+      rm -rf "$repo_name"
+      return 1
     fi
 
-    if [[ "$interactive" == "true" ]]; then
-        print_status "Initializing interactive clone for $repo_name..."
+    # 3. Configure sparse-checkout
+    # FIX: Add --no-cone so Git accepts individual file paths
+    gum spin --title "Configuring sparse checkout..." -- git sparse-checkout init --no-cone
 
-        # 1. Clone with --no-checkout and --filter=blob:none (downloads commits/trees, no file contents)
-        print_command "git clone --filter=blob:none --no-checkout $depth_arg \"$url\" \"$repo_name\""
-        print_status "Cloning structure for $repo_name..."
-        (
-            set -o pipefail
-            git clone --progress --filter=blob:none --no-checkout $depth_arg "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
-                if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
-                    draw_progress_bar "Receiving Structure" "${BASH_REMATCH[1]}"
-                elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
-                    draw_progress_bar "Resolving Deltas" "${BASH_REMATCH[1]}"
-                fi
-            done
-        )
-        local status=$?
-        echo ""
+    # Set the selected paths
+    echo "$selected_paths" | git sparse-checkout set --stdin
 
-        if [[ $status -ne 0 || ! -d "$repo_name" ]]; then
-            print_error "Clone failed."
-            return 1
+    print_status "Downloading selected files..."
+    (
+      set -o pipefail
+      git checkout --progress HEAD 2>&1 | while read -r -d $'\r' line; do
+        if [[ $line =~ Updating\ files:\ +([0-9]+)% ]]; then
+          draw_progress_bar "Updating Files" "${BASH_REMATCH[1]}"
         fi
+      done
+    )
+    echo ""
 
-        pushd "$repo_name" >/dev/null || return 1
+    popd >/dev/null
+    print_status "Successfully cloned selected files into '$repo_name'!"
 
-        # 2. List all files (from HEAD) and let user select
-        print_status "Fetching file list..."
-        local selected_paths
-        # git ls-tree -r --name-only HEAD lists all files recursively
-        selected_paths=$(git ls-tree -r --name-only HEAD | gum filter --no-limit --placeholder "Select files/folders to download (Space to select)")
+  else
+    # Standard clone with progress bar
+    print_command "git clone $depth_arg \"$url\" \"$repo_name\""
+    print_status "Cloning $url into $repo_name..."
 
-        if [[ -z "$selected_paths" ]]; then
-            print_warning "No files selected. Aborting checkout."
-            popd >/dev/null
-            rm -rf "$repo_name"
-            return 1
+    # Use a subshell with pipefail to catch git clone errors
+    (
+      set -o pipefail
+      git clone --progress $depth_arg "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
+        if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
+          draw_progress_bar "Receiving Objects" "${BASH_REMATCH[1]}"
+        elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
+          draw_progress_bar "Resolving Deltas" "${BASH_REMATCH[1]}"
         fi
+      done
+    )
+    local status=$?
+    echo "" # New line after progress bar
 
-        # 3. Configure sparse-checkout
-        # FIX: Add --no-cone so Git accepts individual file paths
-        gum spin --title "Configuring sparse checkout..." -- git sparse-checkout init --no-cone
-
-        # Set the selected paths
-        echo "$selected_paths" | git sparse-checkout set --stdin
-
-        print_status "Downloading selected files..."
-        (
-            set -o pipefail
-            git checkout --progress HEAD 2>&1 | while read -r -d $'\r' line; do
-                if [[ $line =~ Updating\ files:\ +([0-9]+)% ]]; then
-                    draw_progress_bar "Updating Files" "${BASH_REMATCH[1]}"
-                fi
-            done
-        )
-        echo ""
-
-        popd >/dev/null
-        print_status "Successfully cloned selected files into '$repo_name'!"
-
+    if [[ $status -eq 0 && -d "$repo_name" ]]; then
+      print_status "Successfully cloned '$url' into '$repo_name'!"
     else
-        # Standard clone with progress bar
-        print_command "git clone $depth_arg \"$url\" \"$repo_name\""
-        print_status "Cloning $url into $repo_name..."
-
-        # Use a subshell with pipefail to catch git clone errors
-        (
-            set -o pipefail
-            git clone --progress $depth_arg "$url" "$repo_name" 2>&1 | while read -r -d $'\r' line; do
-                if [[ $line =~ Receiving\ objects:\ +([0-9]+)% ]]; then
-                    draw_progress_bar "Receiving Objects" "${BASH_REMATCH[1]}"
-                elif [[ $line =~ Resolving\ deltas:\ +([0-9]+)% ]]; then
-                    draw_progress_bar "Resolving Deltas" "${BASH_REMATCH[1]}"
-                fi
-            done
-        )
-        local status=$?
-        echo "" # New line after progress bar
-
-        if [[ $status -eq 0 && -d "$repo_name" ]]; then
-            print_status "Successfully cloned '$url' into '$repo_name'!"
-        else
-            print_error "Clone failed."
-            return 1
-        fi
+      print_error "Clone failed."
+      return 1
     fi
+  fi
 }
 
 # a .gitignore generator to your tool
 summon_gitignore() {
-    # Check for curl
-    if ! command -v curl &>/dev/null; then
-        print_error "Error: curl is not installed. Required to summon the Architect."
-        return 1
+  # Check for curl
+  if ! command -v curl &>/dev/null; then
+    print_error "Error: curl is not installed. Required to summon the Architect."
+    return 1
+  fi
+
+  print_status "📜 Summoning the Architect..."
+
+  # Check if .gitignore already exists
+  if [[ -f ".gitignore" ]]; then
+    print_warning "A .gitignore file already exists in this directory."
+    if ! gum confirm "Do you want to overwrite it?"; then
+      print_status "Operation cancelled."
+      return 0
     fi
+  fi
 
-    print_status "📜 Summoning the Architect..."
+  # List of popular templates (curated from github/gitignore)
+  local templates=(
+    "Actionscript" "Ada" "Android" "Angular" "AppEngine" "ArchLinuxPackages" "Autotools"
+    "C++" "C" "CMake" "CUDA" "CakePHP" "ChefCookbook" "Clojure" "CodeIgniter" "Composer"
+    "Dart" "Delphi" "Dotnet" "Drupal" "Elixir" "Elm" "Erlang" "Flutter" "Fortran"
+    "Go" "Godot" "Gradle" "Grails" "Haskell" "Haxe" "Java" "Jekyll" "Joomla" "Julia"
+    "Kotlin" "Laravel" "Lua" "Magento" "Maven" "Nextjs" "Nim" "Nix" "Node" "Objective-C"
+    "Opa" "Perl" "Phalcon" "PlayFramework" "Prestashop" "Processing" "Python" "Qt"
+    "R" "ROS" "Rails" "Ruby" "Rust" "Scala" "Scheme" "Smalltalk" "Swift" "Symfony"
+    "Terraform" "TeX" "Unity" "UnrealEngine" "VisualStudio" "WordPress" "Zig"
+  )
 
-    # Check if .gitignore already exists
-    if [[ -f ".gitignore" ]]; then
-        print_warning "A .gitignore file already exists in this directory."
-        if ! gum confirm "Do you want to overwrite it?"; then
-            print_status "Operation cancelled."
-            return 0
-        fi
+  # Use gum filter for a better selection experience
+  local template=$(printf "%s\n" "${templates[@]}" | gum filter --placeholder "Search for a blueprint (e.g., Python, Node, Rust)...")
+
+  if [[ -z "$template" ]]; then
+    print_status "Cancelled."
+    return 0
+  fi
+
+  # Fetch the template directly from GitHub's official repository
+  print_status "Drawing the magic circle for $template..."
+
+  local url="https://raw.githubusercontent.com/github/gitignore/main/${template}.gitignore"
+
+  print_command "curl -sL \"$url\" -o .gitignore"
+  if gum spin --title "Fetching template..." -- curl -sL "$url" -o .gitignore; then
+    # Verify the file is not empty (curl might return 404 text if URL is wrong)
+    if grep -q "404: Not Found" .gitignore; then
+      print_error "Failed to summon template: 404 Not Found at $url"
+      rm .gitignore
+      return 1
     fi
-
-    # List of popular templates (curated from github/gitignore)
-    local templates=(
-        "Actionscript" "Ada" "Android" "Angular" "AppEngine" "ArchLinuxPackages" "Autotools"
-        "C++" "C" "CMake" "CUDA" "CakePHP" "ChefCookbook" "Clojure" "CodeIgniter" "Composer"
-        "Dart" "Delphi" "Dotnet" "Drupal" "Elixir" "Elm" "Erlang" "Flutter" "Fortran"
-        "Go" "Godot" "Gradle" "Grails" "Haskell" "Haxe" "Java" "Jekyll" "Joomla" "Julia"
-        "Kotlin" "Laravel" "Lua" "Magento" "Maven" "Nextjs" "Nim" "Nix" "Node" "Objective-C"
-        "Opa" "Perl" "Phalcon" "PlayFramework" "Prestashop" "Processing" "Python" "Qt"
-        "R" "ROS" "Rails" "Ruby" "Rust" "Scala" "Scheme" "Smalltalk" "Swift" "Symfony"
-        "Terraform" "TeX" "Unity" "UnrealEngine" "VisualStudio" "WordPress" "Zig"
-    )
-
-    # Use gum filter for a better selection experience
-    local template=$(printf "%s\n" "${templates[@]}" | gum filter --placeholder "Search for a blueprint (e.g., Python, Node, Rust)...")
-
-    if [[ -z "$template" ]]; then
-        print_status "Cancelled."
-        return 0
-    fi
-
-    # Fetch the template directly from GitHub's official repository
-    print_status "Drawing the magic circle for $template..."
-
-    local url="https://raw.githubusercontent.com/github/gitignore/main/${template}.gitignore"
-
-    print_command "curl -sL \"$url\" -o .gitignore"
-    if gum spin --title "Fetching template..." -- curl -sL "$url" -o .gitignore; then
-        # Verify the file is not empty (curl might return 404 text if URL is wrong)
-        if grep -q "404: Not Found" .gitignore; then
-            print_error "Failed to summon template: 404 Not Found at $url"
-            rm .gitignore
-            return 1
-        fi
-        print_status "✨ .gitignore for $template created successfully!"
-    else
-        print_error "Failed to summon template. Check your internet connection."
-        return 1
-    fi
+    print_status "✨ .gitignore for $template created successfully!"
+  else
+    print_error "Failed to summon template. Check your internet connection."
+    return 1
+  fi
 }
 
 # Function for Conventional Commits
 commit_wizard() {
-    echo -e "${PURPLE}=== The Alchemist's Commit ===${NC}"
+  echo -e "${PURPLE}=== The Alchemist's Commit ===${NC}"
 
-    # 1. Select Type
-    local type=$(gum choose --header "Select change type:" \
-        "feat: A new feature" \
-        "fix: A bug fix" \
-        "docs: Documentation only changes" \
-        "style: Changes that do not affect the meaning of the code" \
-        "refactor: A code change that neither fixes a bug nor adds a feature" \
-        "perf: A code change that improves performance" \
-        "test: Adding missing tests or correcting existing tests" \
-        "chore: Changes to the build process or auxiliary tools")
+  # 1. Select Type
+  local type=$(gum choose --header "Select change type:" \
+    "feat: A new feature" \
+    "fix: A bug fix" \
+    "docs: Documentation only changes" \
+    "style: Changes that do not affect the meaning of the code" \
+    "refactor: A code change that neither fixes a bug nor adds a feature" \
+    "perf: A code change that improves performance" \
+    "test: Adding missing tests or correcting existing tests" \
+    "chore: Changes to the build process or auxiliary tools")
 
-    # Extract just the type (e.g., "feat") from the selection
-    type=$(echo "$type" | cut -d: -f1)
-    [[ -z "$type" ]] && return 1
+  # Extract just the type (e.g., "feat") from the selection
+  type=$(echo "$type" | cut -d: -f1)
+  [[ -z "$type" ]] && return 1
 
-    # 2. Scope (Optional)
-    local scope=$(gum input --placeholder "Scope (optional, e.g., 'login', 'ui'). Press Enter to skip.")
+  # 2. Scope (Optional)
+  local scope=$(gum input --placeholder "Scope (optional, e.g., 'login', 'ui'). Press Enter to skip.")
 
-    # 3. Short Description
-    local summary=$(gum input --placeholder "Short description (imperative mood, e.g., 'add generic login')")
-    [[ -z "$summary" ]] && print_warning "Summary is required!" && return 1
+  # 3. Short Description
+  local summary=$(gum input --placeholder "Short description (imperative mood, e.g., 'add generic login')")
+  [[ -z "$summary" ]] && print_warning "Summary is required!" && return 1
 
-    # 4. Long Description (Optional)
-    local body=""
-    if gum confirm "Add a longer description (body)?"; then
-        body=$(gum write --placeholder "Enter detailed description...")
-    fi
+  # 4. Long Description (Optional)
+  local body=""
+  if gum confirm "Add a longer description (body)?"; then
+    body=$(gum write --placeholder "Enter detailed description...")
+  fi
 
-    # 5. Breaking Change?
-    local breaking=""
-    if gum confirm "Is this a BREAKING CHANGE?"; then
-        breaking="!"
-    fi
+  # 5. Breaking Change?
+  local breaking=""
+  if gum confirm "Is this a BREAKING CHANGE?"; then
+    breaking="!"
+  fi
 
-    # Construct the message
-    local commit_msg=""
-    if [[ -n "$scope" ]]; then
-        commit_msg="${type}(${scope})${breaking}: ${summary}"
-    else
-        commit_msg="${type}${breaking}: ${summary}"
-    fi
+  # Construct the message
+  local commit_msg=""
+  if [[ -n "$scope" ]]; then
+    commit_msg="${type}(${scope})${breaking}: ${summary}"
+  else
+    commit_msg="${type}${breaking}: ${summary}"
+  fi
 
-    # Append body if exists
-    if [[ -n "$body" ]]; then
-        commit_msg="${commit_msg}
+  # Append body if exists
+  if [[ -n "$body" ]]; then
+    commit_msg="${commit_msg}
 
 ${body}"
-    fi
+  fi
 
-    # Preview and Confirm
-    echo
-    gum style --border rounded --border-foreground "$BIMAGIC_PRIMARY" --padding "1 2" \
-        "PREVIEW:" "$commit_msg"
-    echo
+  # Preview and Confirm
+  echo
+  gum style --border rounded --border-foreground "$BIMAGIC_PRIMARY" --padding "1 2" \
+    "PREVIEW:" "$commit_msg"
+  echo
 
-    if gum confirm "Commit with this message?"; then
-        print_command "git commit -m \"$commit_msg\""
-        git commit -m "$commit_msg"
-        print_status "󱝁 Mischief managed! (Commit successful)"
-    else
-        print_warning "Commit cancelled."
-    fi
+  if gum confirm "Commit with this message?"; then
+    print_command "git commit -m \"$commit_msg\""
+    git commit -m "$commit_msg"
+    print_status "󱝁 Mischief managed! (Commit successful)"
+  else
+    print_warning "Commit cancelled."
+  fi
 }
 
 #function to display git graph
 pretty_git_log() {
-    print_command "git log --graph --oneline --decorate --all"
-    git log --graph \
-        --abbrev-commit \
-        --decorate \
-        --date=short \
-        --format="%C(auto)%h%Creset %C(blue)%ad%Creset %C(green)%an%Creset %C(yellow)%d%Creset %Creset%s" \
-        --all
+  print_command "git log --graph --oneline --decorate --all"
+  git log --graph \
+    --abbrev-commit \
+    --decorate \
+    --date=short \
+    --format="%C(auto)%h%Creset %C(blue)%ad%Creset %C(green)%an%Creset %C(yellow)%d%Creset %Creset%s" \
+    --all
 }
 
 # Check if environment variables are set (optional for SSH)
 if [[ -z "$GITHUB_USER" ]] || [[ -z "$GITHUB_TOKEN" ]]; then
-    print_warning "GITHUB_USER or GITHUB_TOKEN not set. Defaulting to SSH/Local mode."
+  print_warning "GITHUB_USER or GITHUB_TOKEN not set. Defaulting to SSH/Local mode."
 fi
 
 # Parse CLI arguments
@@ -690,287 +690,287 @@ CLI_DEPTH=""
 
 # Preserve args in a loop
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-    -d)
-        CLI_MODE="clone"
-        shift
-        ;;
-    --depth)
-        CLI_DEPTH="$2"
-        shift 2
-        ;;
-    -i)
-        CLI_INTERACTIVE="true"
-        shift
-        ;;
-    -z)
-        CLI_MODE="lazy"
-        shift
-        ;;
-    -s)
-        CLI_MODE="status"
-        shift
-        ;;
-    -u)
-        CLI_MODE="undo"
-        shift
-        ;;
-    -g)
-        CLI_MODE="graph"
-        shift
-        ;;
-    -p)
-        CLI_MODE="pull"
-        shift
-        ;;
-    -a | --architect)
-        CLI_MODE="architect"
-        shift
-        ;;
-    *)
-        # Argument handling based on current mode
-        if [[ "$CLI_MODE" == "clone" && -z "$CLI_URL" ]]; then
-            CLI_URL="$1"
-        elif [[ "$CLI_MODE" == "lazy" && -z "$CLI_MSG" ]]; then
-            CLI_MSG="$1"
-        fi
-        shift
-        ;;
-    esac
+  case "$1" in
+  -d)
+    CLI_MODE="clone"
+    shift
+    ;;
+  --depth)
+    CLI_DEPTH="$2"
+    shift 2
+    ;;
+  -i)
+    CLI_INTERACTIVE="true"
+    shift
+    ;;
+  -z)
+    CLI_MODE="lazy"
+    shift
+    ;;
+  -s)
+    CLI_MODE="status"
+    shift
+    ;;
+  -u)
+    CLI_MODE="undo"
+    shift
+    ;;
+  -g)
+    CLI_MODE="graph"
+    shift
+    ;;
+  -p)
+    CLI_MODE="pull"
+    shift
+    ;;
+  -a | --architect)
+    CLI_MODE="architect"
+    shift
+    ;;
+  *)
+    # Argument handling based on current mode
+    if [[ "$CLI_MODE" == "clone" && -z "$CLI_URL" ]]; then
+      CLI_URL="$1"
+    elif [[ "$CLI_MODE" == "lazy" && -z "$CLI_MSG" ]]; then
+      CLI_MSG="$1"
+    fi
+    shift
+    ;;
+  esac
 done
 
 # --- Mode Handlers ---
 
 if [[ "$CLI_MODE" == "clone" ]]; then
-    if [[ -z "$CLI_URL" ]]; then
-        print_error "Error: Repository URL required with -d"
-        exit 1
-    fi
-    clone_repo "$CLI_URL" "$CLI_INTERACTIVE" "$CLI_DEPTH"
-    exit 0
+  if [[ -z "$CLI_URL" ]]; then
+    print_error "Error: Repository URL required with -d"
+    exit 1
+  fi
+  clone_repo "$CLI_URL" "$CLI_INTERACTIVE" "$CLI_DEPTH"
+  exit 0
 fi
 
 if [[ "$CLI_MODE" == "status" ]]; then
-    show_repo_status
-    exit 0
+  show_repo_status
+  exit 0
 fi
 
 if [[ "$CLI_MODE" == "pull" ]]; then
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_error "Not a git repository!"
-        exit 1
-    fi
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    print_error "Not a git repository!"
+    exit 1
+  fi
 
-    # 1. Fetch
-    print_command "git fetch --all"
-    if gum spin --title "Fetching updates..." -- git fetch --all; then
-        print_status "Fetch complete."
-    else
-        print_warning "Fetch encountered issues during fetch."
-    fi
+  # 1. Fetch
+  print_command "git fetch --all"
+  if gum spin --title "Fetching updates..." -- git fetch --all; then
+    print_status "Fetch complete."
+  else
+    print_warning "Fetch encountered issues during fetch."
+  fi
 
-    # 2. Pull
-    print_command "git pull --all"
-    if gum spin --title "Pulling all..." -- git pull --all; then
-        print_status "Pull all complete."
-    else
-        print_error "Pull failed. There might be conflicts or no upstream set."
-    fi
-    exit 0
+  # 2. Pull
+  print_command "git pull --all"
+  if gum spin --title "Pulling all..." -- git pull --all; then
+    print_status "Pull all complete."
+  else
+    print_error "Pull failed. There might be conflicts or no upstream set."
+  fi
+  exit 0
 fi
 
 if [[ "$CLI_MODE" == "graph" ]]; then
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_error "Not a git repository!"
-        exit 1
-    fi
-    pretty_git_log
-    exit 0
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    print_error "Not a git repository!"
+    exit 1
+  fi
+  pretty_git_log
+  exit 0
 fi
 
 if [[ "$CLI_MODE" == "architect" ]]; then
-    summon_gitignore
-    exit 0
+  summon_gitignore
+  exit 0
 fi
 
 # Mode: Time Turner (Undo)
 if [[ "$CLI_MODE" == "undo" ]]; then
-    print_status "󱦟 Spinning the Time Turner..."
+  print_status "󱦟 Spinning the Time Turner..."
 
-    # Check if there is a commit to undo
-    if ! git rev-parse HEAD >/dev/null 2>&1; then
-        print_error "No commits to undo! This repo is empty."
-        exit 1
+  # Check if there is a commit to undo
+  if ! git rev-parse HEAD >/dev/null 2>&1; then
+    print_error "No commits to undo! This repo is empty."
+    exit 1
+  fi
+
+  # Check if we are on the initial commit (no parent)
+  is_initial_commit=false
+  if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
+    is_initial_commit=true
+  fi
+
+  # Ask user for the type of undo
+  undo_type=$(gum choose --header "Select Undo Level:" \
+    "Soft (Undo commit, keep changes staged - Best for fixing typos)" \
+    "Mixed (Undo commit, keep changes unstaged - Best for splitting work)" \
+    "Hard (DESTROY changes - Revert to previous state)" \
+    "Cancel")
+
+  case "$undo_type" in
+  "Soft"*)
+    if [[ "$is_initial_commit" == "true" ]]; then
+      print_command "git update-ref -d HEAD"
+      git update-ref -d HEAD
+    else
+      print_command "git reset --soft HEAD~1"
+      git reset --soft HEAD~1
     fi
-
-    # Check if we are on the initial commit (no parent)
-    is_initial_commit=false
-    if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
-        is_initial_commit=true
+    print_status "✨ Success! I undid the commit, but kept your files ready to commit again."
+    ;;
+  "Mixed"*)
+    if [[ "$is_initial_commit" == "true" ]]; then
+      print_command "git update-ref -d HEAD"
+      git update-ref -d HEAD
+      print_command "git rm --cached -r -q ."
+      git rm --cached -r -q .
+    else
+      print_command "git reset HEAD~1"
+      git reset HEAD~1
     fi
-
-    # Ask user for the type of undo
-    undo_type=$(gum choose --header "Select Undo Level:" \
-        "Soft (Undo commit, keep changes staged - Best for fixing typos)" \
-        "Mixed (Undo commit, keep changes unstaged - Best for splitting work)" \
-        "Hard (DESTROY changes - Revert to previous state)" \
-        "Cancel")
-
-    case "$undo_type" in
-    "Soft"*)
-        if [[ "$is_initial_commit" == "true" ]]; then
-            print_command "git update-ref -d HEAD"
-            git update-ref -d HEAD
-        else
-            print_command "git reset --soft HEAD~1"
-            git reset --soft HEAD~1
-        fi
-        print_status "✨ Success! I undid the commit, but kept your files ready to commit again."
-        ;;
-    "Mixed"*)
-        if [[ "$is_initial_commit" == "true" ]]; then
-            print_command "git update-ref -d HEAD"
-            git update-ref -d HEAD
-            print_command "git rm --cached -r -q ."
-            git rm --cached -r -q .
-        else
-            print_command "git reset HEAD~1"
-            git reset HEAD~1
-        fi
-        print_status "󱞈 Success! I undid the commit and unstaged the files."
-        ;;
-    "Hard"*)
-        if gum confirm " DANGER: This deletes your work forever. Are you sure?"; then
-            if [[ "$is_initial_commit" == "true" ]]; then
-                # Unstage everything first, then clean to ensure files are deleted
-                print_command "git update-ref -d HEAD"
-                git update-ref -d HEAD
-                print_command "git rm --cached -r -q ."
-                git rm --cached -r -q . >/dev/null 2>&1
-                print_command "git clean -fd"
-                git clean -fd
-            else
-                print_command "git reset --hard HEAD~1"
-                git reset --hard HEAD~1
-            fi
-            print_status "󱠇 Obliviate! The last commit and its changes are destroyed."
-        else
-            print_status "Operation cancelled."
-        fi
-        ;;
-    *)
-        print_status "Mischief managed (Cancelled)."
-        ;;
-    esac
-    exit 0
+    print_status "󱞈 Success! I undid the commit and unstaged the files."
+    ;;
+  "Hard"*)
+    if gum confirm " DANGER: This deletes your work forever. Are you sure?"; then
+      if [[ "$is_initial_commit" == "true" ]]; then
+        # Unstage everything first, then clean to ensure files are deleted
+        print_command "git update-ref -d HEAD"
+        git update-ref -d HEAD
+        print_command "git rm --cached -r -q ."
+        git rm --cached -r -q . >/dev/null 2>&1
+        print_command "git clean -fd"
+        git clean -fd
+      else
+        print_command "git reset --hard HEAD~1"
+        git reset --hard HEAD~1
+      fi
+      print_status "󱠇 Obliviate! The last commit and its changes are destroyed."
+    else
+      print_status "Operation cancelled."
+    fi
+    ;;
+  *)
+    print_status "Mischief managed (Cancelled)."
+    ;;
+  esac
+  exit 0
 fi
 
 if [[ "$CLI_MODE" == "lazy" ]]; then
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_error "Not a git repository!"
-        exit 1
-    fi
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    print_error "Not a git repository!"
+    exit 1
+  fi
 
-    if [[ -z "$CLI_MSG" ]]; then
-        print_error "Error: Commit message required for Lazy Wizard (-z)"
-        echo "Usage: bimagic -z \"commit message\""
-        exit 1
-    fi
+  if [[ -z "$CLI_MSG" ]]; then
+    print_error "Error: Commit message required for Lazy Wizard (-z)"
+    echo "Usage: bimagic -z \"commit message\""
+    exit 1
+  fi
 
-    print_status "  Lazy Wizard invoked!"
+  print_status "  Lazy Wizard invoked!"
 
-    # 1. Add all changes
-    print_command "git add ."
-    if gum spin --title "Adding files..." -- git add .; then
-        print_status "Files added."
+  # 1. Add all changes
+  print_command "git add ."
+  if gum spin --title "Adding files..." -- git add .; then
+    print_status "Files added."
+  else
+    print_error "Failed to add files."
+    exit 1
+  fi
+
+  # 2. Commit
+  print_command "git commit -m \"$CLI_MSG\""
+  if git commit -m "$CLI_MSG"; then
+    print_status "Committed: $CLI_MSG"
+  else
+    print_error "Commit failed (nothing to commit?)"
+    exit 1
+  fi
+
+  # 3. Push
+  branch=$(get_current_branch)
+  print_status "Pushing to $branch..."
+
+  print_command "git push"
+  if gum spin --title "Pushing..." -- git push; then
+    print_status "󱝂 Magic complete!"
+  else
+    # Try setting upstream if standard push failed
+    print_warning "Standard push failed. Trying to set upstream..."
+    print_command "git push -u origin \"$branch\""
+    if gum spin --title "Pushing (upstream)..." -- git push -u origin "$branch"; then
+      print_status "󱝂 Magic complete (upstream set)!"
     else
-        print_error "Failed to add files."
-        exit 1
+      print_error "Push failed."
+      exit 1
     fi
-
-    # 2. Commit
-    print_command "git commit -m \"$CLI_MSG\""
-    if git commit -m "$CLI_MSG"; then
-        print_status "Committed: $CLI_MSG"
-    else
-        print_error "Commit failed (nothing to commit?)"
-        exit 1
-    fi
-
-    # 3. Push
-    branch=$(get_current_branch)
-    print_status "Pushing to $branch..."
-
-    print_command "git push"
-    if gum spin --title "Pushing..." -- git push; then
-        print_status "󱝂 Magic complete!"
-    else
-        # Try setting upstream if standard push failed
-        print_warning "Standard push failed. Trying to set upstream..."
-        print_command "git push -u origin \"$branch\""
-        if gum spin --title "Pushing (upstream)..." -- git push -u origin "$branch"; then
-            print_status "󱝂 Magic complete (upstream set)!"
-        else
-            print_error "Push failed."
-            exit 1
-        fi
-    fi
-    exit 0
+  fi
+  exit 0
 fi
 
 CONFIG_DIR="$HOME/.config/bimagic"
 VERSION_FILE="$CONFIG_DIR/version"
 
 resurrect_commit() {
-    print_status "󰔪  Summoning the Resurrection Stone..."
+  print_status "󰔪  Summoning the Resurrection Stone..."
 
-    # Check if reflog has entries
-    if [[ -z "$(git reflog 2>/dev/null)" ]]; then
-        print_error "The ancient logs are empty. Nothing to resurrect."
-        return 1
+  # Check if reflog has entries
+  if [[ -z "$(git reflog 2>/dev/null)" ]]; then
+    print_error "The ancient logs are empty. Nothing to resurrect."
+    return 1
+  fi
+
+  echo "Search the ancient timelines for your lost code:"
+  # Use gum filter to search through the entire reflog
+  local selected_log=$(git reflog --date=relative --format="%h %gd %C(blue)%ad%Creset %s" | gum filter --placeholder "Search for a lost commit message or hash...")
+
+  if [[ -z "$selected_log" ]]; then
+    print_status "Resurrection cancelled."
+    return 0
+  fi
+
+  # Extract the hash (the first word)
+  local target_hash=$(echo "$selected_log" | awk '{print $1}')
+
+  echo
+  gum style --border rounded --border-foreground "$BIMAGIC_PRIMARY" --padding "1 2" \
+    "TARGET TIMELINE:" "$selected_log"
+  echo
+
+  # Give the user options on how to resurrect
+  local action=$(gum choose "󰔱 Create a new branch here (Safest)" "  Hard Reset current branch to here (Dangerous)" "Cancel")
+
+  case "$action" in
+  "󰔱 Create a new branch here (Safest)")
+    local new_branch=$(gum input --placeholder "Enter new branch name (e.g., recovered-code)")
+    if [[ -n "$new_branch" ]]; then
+      print_command "git checkout -b \"$new_branch\" \"$target_hash\""
+      git checkout -b "$new_branch" "$target_hash"
+      print_status "󱝁 Timeline restored! You are now on branch: $new_branch"
+    fi
+    ;;
+  "  Hard Reset current branch to here (Dangerous)")
+    if gum confirm "This will overwrite your CURRENT work. Are you absolutely sure?"; then
+      print_command "git reset --hard $target_hash"
+      git reset --hard "$target_hash"
+      print_status "󱝁 Timeline restored via hard reset!"
     fi
 
-    echo "Search the ancient timelines for your lost code:"
-    # Use gum filter to search through the entire reflog
-    local selected_log=$(git reflog --date=relative --format="%h %gd %C(blue)%ad%Creset %s" | gum filter --placeholder "Search for a lost commit message or hash...")
-
-    if [[ -z "$selected_log" ]]; then
-        print_status "Resurrection cancelled."
-        return 0
-    fi
-
-    # Extract the hash (the first word)
-    local target_hash=$(echo "$selected_log" | awk '{print $1}')
-
-    echo
-    gum style --border rounded --border-foreground "$BIMAGIC_PRIMARY" --padding "1 2" \
-        "TARGET TIMELINE:" "$selected_log"
-    echo
-
-    # Give the user options on how to resurrect
-    local action=$(gum choose "󰔱 Create a new branch here (Safest)" "  Hard Reset current branch to here (Dangerous)" "Cancel")
-
-    case "$action" in
-    "󰔱 Create a new branch here (Safest)")
-        local new_branch=$(gum input --placeholder "Enter new branch name (e.g., recovered-code)")
-        if [[ -n "$new_branch" ]]; then
-            print_command "git checkout -b \"$new_branch\" \"$target_hash\""
-            git checkout -b "$new_branch" "$target_hash"
-            print_status "󱝁 Timeline restored! You are now on branch: $new_branch"
-        fi
-        ;;
-    "  Hard Reset current branch to here (Dangerous)")
-        if gum confirm "This will overwrite your CURRENT work. Are you absolutely sure?"; then
-            print_command "git reset --hard $target_hash"
-            git reset --hard "$target_hash"
-            print_status "󱝁 Timeline restored via hard reset!"
-        fi
-
-        ;;
-    *)
-        print_status "The stone goes dormant."
-        ;;
-    esac
+    ;;
+  *)
+    print_status "The stone goes dormant."
+    ;;
+  esac
 }
 
 scrying_glass() {
@@ -1030,592 +1030,592 @@ scrying_glass() {
 }
 
 show_welcome_banner() {
-    clear
-    echo -e "$(get_ansi_esc "$BANNER_COLOR_1")▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
-    echo -e "$(get_ansi_esc "$BANNER_COLOR_2")▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   \033[0m"
-    echo -e "$(get_ansi_esc "$BANNER_COLOR_3")▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   \033[0m"
-    echo -e "$(get_ansi_esc "$BANNER_COLOR_4")▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖\033[0m"
-    echo -e "$(get_ansi_esc "$BANNER_COLOR_5")                              \033[0m"
+  clear
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_1")▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_2")▐▌   ▄ █ █ █ ▐▌ ▐▌▐▌   ▄ ▐▌   \033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_3")▐▛▀▚▖█ █   █ ▐▛▀▜▌▐▌▝▜▌█ ▐▌   \033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_4")▐▙▄▞▘█       ▐▌ ▐▌▝▚▄▞▘█ ▝▚▄▄▖\033[0m"
+  echo -e "$(get_ansi_esc "$BANNER_COLOR_5")                              \033[0m"
 
-    echo
-    gum style --foreground "$BIMAGIC_PRIMARY" --bold "✨ Welcome to Bimagic Git Wizard $VERSION ✨"
-    echo
+  echo
+  gum style --foreground "$BIMAGIC_PRIMARY" --bold "✨ Welcome to Bimagic Git Wizard $VERSION ✨"
+  echo
 
-    if [[ ! -f "$VERSION_FILE" ]]; then
-        gum style --foreground "$BIMAGIC_SUCCESS" "It looks like this is your first time using Bimagic! Let's cast some spells."
-    else
-        gum style --foreground "$BIMAGIC_SUCCESS" "Bimagic has been updated to $VERSION! Enjoy the new magic."
-    fi
-    echo
+  if [[ ! -f "$VERSION_FILE" ]]; then
+    gum style --foreground "$BIMAGIC_SUCCESS" "It looks like this is your first time using Bimagic! Let's cast some spells."
+  else
+    gum style --foreground "$BIMAGIC_SUCCESS" "Bimagic has been updated to $VERSION! Enjoy the new magic."
+  fi
+  echo
 
-    # Save the current version so this doesn't show again until the next update
-    mkdir -p "$CONFIG_DIR"
-    echo "$VERSION" >"$VERSION_FILE"
+  # Save the current version so this doesn't show again until the next update
+  mkdir -p "$CONFIG_DIR"
+  echo "$VERSION" >"$VERSION_FILE"
 
-    gum style --foreground "$BIMAGIC_MUTED" "Press Enter to open the spellbook..."
-    read -r </dev/tty
+  gum style --foreground "$BIMAGIC_MUTED" "Press Enter to open the spellbook..."
+  read -r </dev/tty
 }
 
 if [[ -z "$CLI_MODE" ]]; then
-    # Check if the version file doesn't exist, OR if it doesn't match the current version
-    if [[ ! -f "$VERSION_FILE" ]] || [[ "$(cat "$VERSION_FILE")" != "$VERSION" ]]; then
-        show_welcome_banner
-    fi
+  # Check if the version file doesn't exist, OR if it doesn't match the current version
+  if [[ ! -f "$VERSION_FILE" ]] || [[ "$(cat "$VERSION_FILE")" != "$VERSION" ]]; then
+    show_welcome_banner
+  fi
 fi
 
 while true; do
-    clear
-    show_repo_status # <-- shows the status dashboard at the top
-    # gum menu
-    choice=$(
-        gum choose --header " Choose your spell: (j/k to navigate)" \
-            --cursor " " --cursor.foreground "$BIMAGIC_PRIMARY" \
-            " Clone repository" \
-            " Init new repo" \
-            " Add files" \
-            " Commit changes" \
-            " Push to remote" \
-            " Pull latest changes" \
-            " Create/switch branch" \
-            " Set remote" \
-            "󱖫 Show status" \
-            " Contributor Statistics" \
-            " Git graph" \
-            "󰓗 Summon the Architect (.gitignore)" \
-            "󰮘 Remove files/folders (rm)" \
-            " Merge branches" \
-            " Uninitialize repo" \
-            "󰔪 Summon the Resurrection Stone (Recover lost code)" \
-            "󰁯 Revert commit(s)" \
-            "󰓗 Stash operations" \
-            "󰈈 The Scrying Glass (Quick View)" \
-            "󰿅 Exit"
-    )
+  clear
+  show_repo_status # <-- shows the status dashboard at the top
+  # gum menu
+  choice=$(
+    gum choose --header " Choose your spell: (j/k to navigate)" \
+      --cursor " " --cursor.foreground "$BIMAGIC_PRIMARY" \
+      " Clone repository" \
+      " Init new repo" \
+      " Add files" \
+      " Commit changes" \
+      " Push to remote" \
+      " Pull latest changes" \
+      " Create/switch branch" \
+      " Set remote" \
+      "󱖫 Show status" \
+      " Contributor Statistics" \
+      " Git graph" \
+      "󰓗 Summon the Architect (.gitignore)" \
+      "󰮘 Remove files/folders (rm)" \
+      " Merge branches" \
+      " Uninitialize repo" \
+      "󰔪 Summon the Resurrection Stone (Recover lost code)" \
+      "󰁯 Revert commit(s)" \
+      "󰓗 Stash operations" \
+      "󰈈 The Scrying Glass (Quick View)" \
+      "󰿅 Exit"
+  )
+  echo
+
+  case "$choice" in
+  " Clone repository")
+    repo_url=$(gum input --placeholder "Enter repository URL")
+    if [[ -z "$repo_url" ]]; then continue; fi
+
+    repo_depth=$(gum input --placeholder "Enter depth (empty for full clone)")
+
+    clone_mode=$(gum choose "Standard Clone" "Interactive (Select files)")
+
+    if [[ "$clone_mode" == "Interactive (Select files)" ]]; then
+      clone_repo "$repo_url" "true" "$repo_depth"
+    else
+      clone_repo "$repo_url" "false" "$repo_depth"
+    fi
+    ;;
+  "󰓗 Stash operations")
+    while true; do
+      stash_choice=$(gum choose --header "Stash Operations" \
+        "󱉛 Push (Save) changes" \
+        "󱉙 Pop latest stash" \
+        " List stashes" \
+        " Apply specific stash" \
+        " Drop specific stash" \
+        "󰎟 Clear all stashes" \
+        "󰌍 Back")
+
+      case "$stash_choice" in
+      "󱉛 Push (Save) changes")
+        msg=$(gum input --placeholder "Optional stash message")
+        # Ask about untracked files
+        if gum confirm "Include untracked files?"; then
+          include_untracked="-u"
+        else
+          include_untracked=""
+        fi
+
+        print_command "git stash push $include_untracked -m \"$msg\""
+        if git stash push $include_untracked -m "$msg"; then
+          print_status "Changes stashed successfully!"
+        else
+          print_error "Failed to stash changes."
+        fi
+        ;;
+      "󱉙 Pop latest stash")
+        print_command "git stash pop"
+        if git stash pop; then
+          print_status "Stash popped successfully!"
+        else
+          print_error "Failed to pop stash (possible conflicts)."
+        fi
+        ;;
+      " List stashes")
+        if [[ -z "$(git stash list)" ]]; then
+          print_warning "No stashes found."
+        else
+          git stash list | gum style --border normal --padding "0 1"
+        fi
+        ;;
+      " Apply specific stash")
+        if [[ -z "$(git stash list)" ]]; then
+          print_warning "No stashes found."
+          continue
+        fi
+
+        stash_entry=$(git stash list | gum filter --placeholder "Select stash to apply")
+        if [[ -n "$stash_entry" ]]; then
+          stash_id=$(echo "$stash_entry" | cut -d: -f1)
+          print_command "git stash apply $stash_id"
+          if git stash apply "$stash_id"; then
+            print_status "Applied $stash_id"
+          else
+            print_error "Failed to apply $stash_id"
+          fi
+        fi
+        ;;
+      " Drop specific stash")
+        if [[ -z "$(git stash list)" ]]; then
+          print_warning "No stashes found."
+          continue
+        fi
+
+        stash_entry=$(git stash list | gum filter --placeholder "Select stash to drop")
+        if [[ -n "$stash_entry" ]]; then
+          stash_id=$(echo "$stash_entry" | cut -d: -f1)
+          if gum confirm "Are you sure you want to drop $stash_id?"; then
+            print_command "git stash drop $stash_id"
+            if git stash drop "$stash_id"; then
+              print_status "Dropped $stash_id"
+            else
+              print_error "Failed to drop $stash_id"
+            fi
+          fi
+        fi
+        ;;
+      "󰎟 Clear all stashes")
+        if [[ -z "$(git stash list)" ]]; then
+          print_warning "No stashes found."
+          continue
+        fi
+
+        if gum confirm "DANGER: This will delete ALL stashes. Continue?"; then
+          print_command "git stash clear"
+          if git stash clear; then
+            print_status "All stashes cleared."
+          else
+            print_error "Failed to clear stashes."
+          fi
+        else
+          print_status "Operation cancelled."
+        fi
+        ;;
+      "󰌍 Back")
+        break
+        ;;
+      esac
+      echo
+      gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
+      read -r </dev/tty
+    done
+    ;;
+  " Init new repo")
+    dirname=$(gum input --placeholder "Enter repo directory name (or '.' for current dir)")
+    if [[ -z "$dirname" ]]; then
+      print_warning "Operation cancelled."
+      continue
+    fi
+
+    if [[ "$dirname" == "." ]]; then
+      print_command "git init"
+      git init
+      print_status "Repo initialized in current directory: $(pwd)"
+    else
+      mkdir -p "$dirname"
+      # Run init and rename in a subshell to avoid directory tracking issues
+      (
+        cd "$dirname" || exit 1
+        print_command "git init"
+        git init
+        current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+        if [[ "$current_branch" == "master" ]]; then
+          print_command "git branch -M main"
+          git branch -M main
+          echo "Default branch renamed from 'master' to 'main' in $dirname"
+        fi
+      )
+      print_status "Repo initialized in new directory: $dirname"
+    fi
+    ;;
+  " Add files")
+    while true; do
+      add_choice=$(gum choose " Stage Files" "󰷊 Preview Files" "󰌍 Back")
+
+      if [[ "$add_choice" == "󰌍 Back" ]]; then
+        break
+      fi
+
+      if [[ "$add_choice" == "󰷊 Preview Files" ]]; then
+        scrying_glass
+        continue
+      fi
+
+      # Stage Files logic
+      # Show untracked + modified files, plus an [ALL] option
+      files=$( (
+        echo "[ALL]"
+        git ls-files --others --modified --exclude-standard
+      ) | gum filter --no-limit --placeholder "Select files to add")
+
+      if [[ -z "$files" ]]; then
+        print_warning "No files selected."
+      else
+        # gum filter returns selected items separated by newlines.
+        # We need to handle the case where [ALL] is selected along with other files.
+        if echo "$files" | grep -q "\[ALL\]"; then
+          print_command "git add ."
+          git add .
+          print_status "All files staged."
+        else
+          # Correctly handle filenames with spaces by reading line by line
+          echo "$files" | while read -r f; do
+            if [[ -n "$f" ]]; then
+              print_command "git add \"$f\""
+              git add "$f"
+            fi
+          done
+          print_status "Selected files staged."
+          # Optionally, list the files that were staged
+          echo "$files"
+        fi
+      fi
+      break
+    done
+    ;;
+  " Commit changes")
+    commit_mode=$(gum choose "󰦥 Magic Commit (Builder)" "󱐋 Quick Commit (One-line)")
+
+    if [[ "$commit_mode" == "󰦥 Magic Commit (Builder)" ]]; then
+      commit_wizard
+    else
+      msg=$(gum input --placeholder "Enter commit message")
+      if [[ -z "$msg" ]]; then
+        print_warning "No commit message provided. Cancelled."
+        continue
+      fi
+
+      if gum confirm "Commit changes?"; then
+        print_command "git commit -m \"$msg\""
+        git commit -m "$msg"
+        print_status "Commit done!"
+      else
+        print_status "Commit cancelled."
+      fi
+    fi
+    ;;
+  " Push to remote")
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+    branch=${branch:-main}
+
+    remotes=$(git remote)
+
+    if [[ -z "$remotes" ]]; then
+      print_error "No remote set!"
+      if setup_remote "origin"; then
+        remote="origin"
+      else
+        continue
+      fi
+    else
+      # Select remote if multiple exist
+      if [[ $(echo "$remotes" | wc -l) -eq 1 ]]; then
+        remote="$remotes"
+      else
+        remote=$(echo "$remotes" | gum filter --placeholder "Select remote to push to")
+      fi
+    fi
+
+    [[ -z "$remote" ]] && continue
+
+    if gum confirm "Push branch '$branch' to '$remote'?"; then
+      echo "Pushing branch '$branch' to '$remote'..."
+      print_command "git push -u \"$remote\" \"$branch\""
+      gum spin --title "Pushing..." -- git push -u "$remote" "$branch"
+    else
+      print_status "Push cancelled."
+    fi
+    ;;
+  " Pull latest changes")
+    # Auto-fetch before pulling
+    if gum spin --title "Fetching updates..." -- git fetch --all; then
+      print_status "Fetch complete."
+    else
+      print_warning "Fetch encountered issues."
+    fi
+
+    pull_choice=$(gum choose --header "Select pull mode" \
+      "Pull specific branch" \
+      "Pull all")
+
+    case "$pull_choice" in
+    "Pull all")
+      if gum confirm "Run 'git pull --all'?"; then
+        print_command "git pull --all"
+        gum spin --title "Pulling all..." -- git pull --all
+        print_status "Pull all complete."
+      else
+        print_status "Pull cancelled."
+      fi
+      ;;
+    "Pull specific branch")
+      branch=$(gum input --value "main" --placeholder "Enter branch to pull")
+      branch=${branch:-main}
+
+      remotes=$(git remote 2>/dev/null)
+      if [[ -z "$remotes" ]]; then
+        print_error "No remote set! Cannot pull."
+      else
+        # Select remote if multiple exist
+        if [[ $(echo "$remotes" | wc -l) -eq 1 ]]; then
+          remote="$remotes"
+        else
+          remote=$(echo "$remotes" | gum filter --placeholder "Select remote to pull from")
+        fi
+
+        if [[ -n "$remote" ]]; then
+          if gum confirm "Pull branch '$branch' from '$remote'?"; then
+            print_command "git pull \"$remote\" \"$branch\""
+            gum spin --title "Pulling..." -- git pull "$remote" "$branch"
+          else
+            print_status "Pull cancelled."
+          fi
+        else
+          print_warning "No remote selected."
+        fi
+      fi
+      ;;
+    esac
+    ;;
+  " Create/switch branch")
+    # Show current branch and all available branches
+    current_branch=$(get_current_branch)
+    print_status "Current branch: $current_branch"
+    echo
+    print_status "Available branches:"
+    show_branches
     echo
 
-    case "$choice" in
-    " Clone repository")
-        repo_url=$(gum input --placeholder "Enter repository URL")
-        if [[ -z "$repo_url" ]]; then continue; fi
+    # Let user choose between existing branches or new branch
+    branch_option=$(gum choose "Switch to existing branch" "Create new branch")
 
-        repo_depth=$(gum input --placeholder "Enter depth (empty for full clone)")
+    case "$branch_option" in
+    "Switch to existing branch")
+      # Use gum filter to select from existing branches
+      existing_branch=$(git branch --format='%(refname:short)' | gum filter --placeholder "Select branch to switch to")
+      if [[ -n "$existing_branch" ]]; then
+        print_command "git checkout \"$existing_branch\""
+        git checkout "$existing_branch"
+        print_status "Switched to branch: $existing_branch"
+      else
+        print_warning "No branch selected."
+      fi
+      ;;
+    "Create new branch")
+      new_branch=$(gum input --placeholder "Enter new branch name")
+      if [[ -n "$new_branch" ]]; then
+        print_command "git checkout -b \"$new_branch\""
+        git checkout -b "$new_branch"
+        print_status "Created and switched to new branch: $new_branch"
+      else
+        print_error "No branch name provided."
+      fi
+      ;;
+    *)
+      print_warning "Operation cancelled."
+      ;;
+    esac
+    ;;
+  " Set remote")
+    setup_remote "origin"
+    ;;
+  "󱖫 Show status")
+    git status
+    ;;
+  "󰮘 Remove files/folders (rm)")
+    while true; do
+      remove_choice=$(gum choose "Remove Files" "Preview Files" "Back")
 
-        clone_mode=$(gum choose "Standard Clone" "Interactive (Select files)")
+      if [[ "$remove_choice" == "Back" ]]; then
+        break
+      fi
 
-        if [[ "$clone_mode" == "Interactive (Select files)" ]]; then
-            clone_repo "$repo_url" "true" "$repo_depth"
-        else
-            clone_repo "$repo_url" "false" "$repo_depth"
-        fi
-        ;;
-    "󰓗 Stash operations")
-        while true; do
-            stash_choice=$(gum choose --header "Stash Operations" \
-                "󱉛 Push (Save) changes" \
-                "󱉙 Pop latest stash" \
-                " List stashes" \
-                " Apply specific stash" \
-                " Drop specific stash" \
-                "󰎟 Clear all stashes" \
-                "󰌍 Back")
+      if [[ "$remove_choice" == "Preview Files" ]]; then
+        scrying_glass
+        continue
+      fi
 
-            case "$stash_choice" in
-            "󱉛 Push (Save) changes")
-                msg=$(gum input --placeholder "Optional stash message")
-                # Ask about untracked files
-                if gum confirm "Include untracked files?"; then
-                    include_untracked="-u"
-                else
-                    include_untracked=""
-                fi
+      # Remove Files logic
+      # List tracked + untracked files for removal
+      files=$(git ls-files --cached --others --exclude-standard |
+        gum filter --no-limit --placeholder "Select files/folders to remove")
 
-                print_command "git stash push $include_untracked -m \"$msg\""
-                if git stash push $include_untracked -m "$msg"; then
-                    print_status "Changes stashed successfully!"
-                else
-                    print_error "Failed to stash changes."
-                fi
-                ;;
-            "󱉙 Pop latest stash")
-                print_command "git stash pop"
-                if git stash pop; then
-                    print_status "Stash popped successfully!"
-                else
-                    print_error "Failed to pop stash (possible conflicts)."
-                fi
-                ;;
-            " List stashes")
-                if [[ -z "$(git stash list)" ]]; then
-                    print_warning "No stashes found."
-                else
-                    git stash list | gum style --border normal --padding "0 1"
-                fi
-                ;;
-            " Apply specific stash")
-                if [[ -z "$(git stash list)" ]]; then
-                    print_warning "No stashes found."
-                    continue
-                fi
+      if [[ -z "$files" ]]; then
+        print_warning "No files selected."
+        break
+      fi
 
-                stash_entry=$(git stash list | gum filter --placeholder "Select stash to apply")
-                if [[ -n "$stash_entry" ]]; then
-                    stash_id=$(echo "$stash_entry" | cut -d: -f1)
-                    print_command "git stash apply $stash_id"
-                    if git stash apply "$stash_id"; then
-                        print_status "Applied $stash_id"
-                    else
-                        print_error "Failed to apply $stash_id"
-                    fi
-                fi
-                ;;
-            " Drop specific stash")
-                if [[ -z "$(git stash list)" ]]; then
-                    print_warning "No stashes found."
-                    continue
-                fi
+      echo "Files selected for removal:"
+      # Use 'tput' for better visual separation and color
+      tput setaf 3
+      echo "$files"
+      tput sgr0
+      echo
 
-                stash_entry=$(git stash list | gum filter --placeholder "Select stash to drop")
-                if [[ -n "$stash_entry" ]]; then
-                    stash_id=$(echo "$stash_entry" | cut -d: -f1)
-                    if gum confirm "Are you sure you want to drop $stash_id?"; then
-                        print_command "git stash drop $stash_id"
-                        if git stash drop "$stash_id"; then
-                            print_status "Dropped $stash_id"
-                        else
-                            print_error "Failed to drop $stash_id"
-                        fi
-                    fi
-                fi
-                ;;
-            "󰎟 Clear all stashes")
-                if [[ -z "$(git stash list)" ]]; then
-                    print_warning "No stashes found."
-                    continue
-                fi
+      if gum confirm "Confirm removal? This cannot be undone."; then
+        # Use a 'while read' loop to correctly handle filenames with spaces
+        echo "$files" | while read -r f; do
+          if [[ -z "$f" ]]; then continue; fi # Skip empty lines
 
-                if gum confirm "DANGER: This will delete ALL stashes. Continue?"; then
-                    print_command "git stash clear"
-                    if git stash clear; then
-                        print_status "All stashes cleared."
-                    else
-                        print_error "Failed to clear stashes."
-                    fi
-                else
-                    print_status "Operation cancelled."
-                fi
-                ;;
-            "󰌍 Back")
-                break
-                ;;
-            esac
-            echo
-            gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
-            read -r </dev/tty
+          # Check if the file is tracked by git
+          if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+            # It's a tracked file, use 'git rm'
+            print_command "git rm -rf \"$f\""
+            git rm -rf "$f"
+          else
+            # It's an untracked file, use 'rm'
+            print_command "rm -rf \"$f\""
+            rm -rf "$f"
+          fi
         done
-        ;;
-    " Init new repo")
-        dirname=$(gum input --placeholder "Enter repo directory name (or '.' for current dir)")
-        if [[ -z "$dirname" ]]; then
-            print_warning "Operation cancelled."
-            continue
-        fi
+        print_status "Selected files/folders have been removed."
+      else
+        print_status "Operation cancelled."
+      fi
+      break
+    done
+    ;;
+  " Uninitialize repo")
+    print_warning "This will completely uninitialize the Git repository in this folder."
+    echo "This action will delete the .git directory and cannot be undone!"
+    echo
 
-        if [[ "$dirname" == "." ]]; then
-            print_command "git init"
-            git init
-            print_status "Repo initialized in current directory: $(pwd)"
-        else
-            mkdir -p "$dirname"
-            # Run init and rename in a subshell to avoid directory tracking issues
-            (
-                cd "$dirname" || exit 1
-                print_command "git init"
-                git init
-                current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-                if [[ "$current_branch" == "master" ]]; then
-                    print_command "git branch -M main"
-                    git branch -M main
-                    echo "Default branch renamed from 'master' to 'main' in $dirname"
-                fi
-            )
-            print_status "Repo initialized in new directory: $dirname"
-        fi
-        ;;
-    " Add files")
-        while true; do
-            add_choice=$(gum choose "Stage Files" "Preview Files" "Back")
-
-            if [[ "$add_choice" == "Back" ]]; then
-                break
-            fi
-
-            if [[ "$add_choice" == "Preview Files" ]]; then
-                scrying_glass
-                continue
-            fi
-
-            # Stage Files logic
-            # Show untracked + modified files, plus an [ALL] option
-            files=$( (
-                echo "[ALL]"
-                git ls-files --others --modified --exclude-standard
-            ) | gum filter --no-limit --placeholder "Select files to add")
-
-            if [[ -z "$files" ]]; then
-                print_warning "No files selected."
-            else
-                # gum filter returns selected items separated by newlines.
-                # We need to handle the case where [ALL] is selected along with other files.
-                if echo "$files" | grep -q "\[ALL\]"; then
-                    print_command "git add ."
-                    git add .
-                    print_status "All files staged."
-                else
-                    # Correctly handle filenames with spaces by reading line by line
-                    echo "$files" | while read -r f; do
-                        if [[ -n "$f" ]]; then
-                            print_command "git add \"$f\""
-                            git add "$f"
-                        fi
-                    done
-                    print_status "Selected files staged."
-                    # Optionally, list the files that were staged
-                    echo "$files"
-                fi
-            fi
-            break
-        done
-        ;;
-    " Commit changes")
-        commit_mode=$(gum choose "󰦥 Magic Commit (Builder)" "󱐋 Quick Commit (One-line)")
-
-        if [[ "$commit_mode" == "󰦥 Magic Commit (Builder)" ]]; then
-            commit_wizard
-        else
-            msg=$(gum input --placeholder "Enter commit message")
-            if [[ -z "$msg" ]]; then
-                print_warning "No commit message provided. Cancelled."
-                continue
-            fi
-
-            if gum confirm "Commit changes?"; then
-                print_command "git commit -m \"$msg\""
-                git commit -m "$msg"
-                print_status "Commit done!"
-            else
-                print_status "Commit cancelled."
-            fi
-        fi
-        ;;
-    " Push to remote")
-        branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-        branch=${branch:-main}
-
-        remotes=$(git remote)
-
-        if [[ -z "$remotes" ]]; then
-            print_error "No remote set!"
-            if setup_remote "origin"; then
-                remote="origin"
-            else
-                continue
-            fi
-        else
-            # Select remote if multiple exist
-            if [[ $(echo "$remotes" | wc -l) -eq 1 ]]; then
-                remote="$remotes"
-            else
-                remote=$(echo "$remotes" | gum filter --placeholder "Select remote to push to")
-            fi
-        fi
-
-        [[ -z "$remote" ]] && continue
-
-        if gum confirm "Push branch '$branch' to '$remote'?"; then
-            echo "Pushing branch '$branch' to '$remote'..."
-            print_command "git push -u \"$remote\" \"$branch\""
-            gum spin --title "Pushing..." -- git push -u "$remote" "$branch"
-        else
-            print_status "Push cancelled."
-        fi
-        ;;
-    " Pull latest changes")
-        # Auto-fetch before pulling
-        if gum spin --title "Fetching updates..." -- git fetch --all; then
-            print_status "Fetch complete."
-        else
-            print_warning "Fetch encountered issues."
-        fi
-
-        pull_choice=$(gum choose --header "Select pull mode" \
-            "Pull specific branch" \
-            "Pull all")
-
-        case "$pull_choice" in
-        "Pull all")
-            if gum confirm "Run 'git pull --all'?"; then
-                print_command "git pull --all"
-                gum spin --title "Pulling all..." -- git pull --all
-                print_status "Pull all complete."
-            else
-                print_status "Pull cancelled."
-            fi
-            ;;
-        "Pull specific branch")
-            branch=$(gum input --value "main" --placeholder "Enter branch to pull")
-            branch=${branch:-main}
-
-            remotes=$(git remote 2>/dev/null)
-            if [[ -z "$remotes" ]]; then
-                print_error "No remote set! Cannot pull."
-            else
-                # Select remote if multiple exist
-                if [[ $(echo "$remotes" | wc -l) -eq 1 ]]; then
-                    remote="$remotes"
-                else
-                    remote=$(echo "$remotes" | gum filter --placeholder "Select remote to pull from")
-                fi
-
-                if [[ -n "$remote" ]]; then
-                    if gum confirm "Pull branch '$branch' from '$remote'?"; then
-                        print_command "git pull \"$remote\" \"$branch\""
-                        gum spin --title "Pulling..." -- git pull "$remote" "$branch"
-                    else
-                        print_status "Pull cancelled."
-                    fi
-                else
-                    print_warning "No remote selected."
-                fi
-            fi
-            ;;
-        esac
-        ;;
-    " Create/switch branch")
-        # Show current branch and all available branches
-        current_branch=$(get_current_branch)
-        print_status "Current branch: $current_branch"
-        echo
-        print_status "Available branches:"
-        show_branches
-        echo
-
-        # Let user choose between existing branches or new branch
-        branch_option=$(gum choose "Switch to existing branch" "Create new branch")
-
-        case "$branch_option" in
-        "Switch to existing branch")
-            # Use gum filter to select from existing branches
-            existing_branch=$(git branch --format='%(refname:short)' | gum filter --placeholder "Select branch to switch to")
-            if [[ -n "$existing_branch" ]]; then
-                print_command "git checkout \"$existing_branch\""
-                git checkout "$existing_branch"
-                print_status "Switched to branch: $existing_branch"
-            else
-                print_warning "No branch selected."
-            fi
-            ;;
-        "Create new branch")
-            new_branch=$(gum input --placeholder "Enter new branch name")
-            if [[ -n "$new_branch" ]]; then
-                print_command "git checkout -b \"$new_branch\""
-                git checkout -b "$new_branch"
-                print_status "Created and switched to new branch: $new_branch"
-            else
-                print_error "No branch name provided."
-            fi
-            ;;
-        *)
-            print_warning "Operation cancelled."
-            ;;
-        esac
-        ;;
-    " Set remote")
-        setup_remote "origin"
-        ;;
-    "󱖫 Show status")
-        git status
-        ;;
-    "󰮘 Remove files/folders (rm)")
-        while true; do
-            remove_choice=$(gum choose "Remove Files" "Preview Files" "Back")
-
-            if [[ "$remove_choice" == "Back" ]]; then
-                break
-            fi
-
-            if [[ "$remove_choice" == "Preview Files" ]]; then
-                scrying_glass
-                continue
-            fi
-
-            # Remove Files logic
-            # List tracked + untracked files for removal
-            files=$(git ls-files --cached --others --exclude-standard |
-                gum filter --no-limit --placeholder "Select files/folders to remove")
-
-            if [[ -z "$files" ]]; then
-                print_warning "No files selected."
-                break
-            fi
-
-            echo "Files selected for removal:"
-            # Use 'tput' for better visual separation and color
-            tput setaf 3
-            echo "$files"
-            tput sgr0
-            echo
-
-            if gum confirm "Confirm removal? This cannot be undone."; then
-                # Use a 'while read' loop to correctly handle filenames with spaces
-                echo "$files" | while read -r f; do
-                    if [[ -z "$f" ]]; then continue; fi # Skip empty lines
-
-                    # Check if the file is tracked by git
-                    if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
-                        # It's a tracked file, use 'git rm'
-                        print_command "git rm -rf \"$f\""
-                        git rm -rf "$f"
-                    else
-                        # It's an untracked file, use 'rm'
-                        print_command "rm -rf \"$f\""
-                        rm -rf "$f"
-                    fi
-                done
-                print_status "Selected files/folders have been removed."
-            else
-                print_status "Operation cancelled."
-            fi
-            break
-        done
-        ;;
-    " Uninitialize repo")
-        print_warning "This will completely uninitialize the Git repository in this folder."
-        echo "This action will delete the .git directory and cannot be undone!"
-        echo
-
-        if gum confirm "Are you sure you want to continue?"; then
-            if [ -d ".git" ]; then
-                print_command "rm -rf .git"
-                rm -rf .git
-                print_status "Git repository has been uninitialized."
-            else
-                print_error "No .git directory found here. Nothing to do."
-            fi
-        else
-            print_status "Operation cancelled."
-        fi
-        ;;
-    "󰈈 The Scrying Glass (Quick View)")
+    if gum confirm "Are you sure you want to continue?"; then
+      if [ -d ".git" ]; then
+        print_command "rm -rf .git"
+        rm -rf .git
+        print_status "Git repository has been uninitialized."
+      else
+        print_error "No .git directory found here. Nothing to do."
+      fi
+    else
+      print_status "Operation cancelled."
+    fi
+    ;;
+  "󰈈 The Scrying Glass (Quick View)")
     scrying_glass
     ;;
   "󰿅 Exit")
-        if gum confirm "Are you sure you want to exit?"; then
-            echo "Git Wizard vanishes in a puff of smoke..."
-            exit 0
-        else
-            continue
-        fi
-        ;;
-    " Merge branches")
-        current_branch=$(get_current_branch)
-        print_status "You are on branch: $current_branch"
-        echo
-
-        # Pick branch to merge from
-        merge_branch=$(git branch --format='%(refname:short)' |
-            grep -v "^$current_branch$" |
-            gum filter --placeholder "Select branch to merge into $current_branch")
-
-        if [[ -z "$merge_branch" ]]; then
-            print_warning "No branch selected. Merge cancelled."
-        else
-            if gum confirm "Merge branch '$merge_branch' into '$current_branch'?"; then
-                echo "Merging branch '$merge_branch' into '$current_branch'..."
-                print_command "git merge \"$merge_branch\""
-                if gum spin --title "Merging..." -- git merge "$merge_branch"; then
-                    print_status "Merge successful!"
-                else
-                    print_error "Merge had conflicts! Resolve them manually."
-                fi
-            else
-                print_status "Merge cancelled."
-            fi
-        fi
-        ;;
-    " Contributor Statistics")
-        show_contributor_stats
-        ;;
-
-    "󰓗 Summon the Architect (.gitignore)")
-        summon_gitignore
-        ;;
-
-    "󰔪 Summon the Resurrection Stone (Recover lost code)")
-        resurrect_commit
-        ;;
-
-    "󰁯 Revert commit(s)")
-        print_status "Fetching commit history..."
-        echo
-
-        # Show commits as "<hash> <message>" but keep hash separately
-        commits=$(git log --oneline --decorate |
-            gum filter --no-limit --placeholder "Select commit(s) to revert" |
-            awk '{print $1}')
-
-        if [[ -z "$commits" ]]; then
-            print_warning "No commit selected. Revert cancelled."
-            continue
-        fi
-
-        echo "You selected:"
-        echo "$commits"
-        echo
-
-        if gum confirm "Confirm revert?"; then
-            for c in $commits; do
-                echo "Reverting commit $c..."
-                print_command "git revert --no-edit $c"
-                if git revert --no-edit "$c"; then
-                    print_status "Commit $c reverted."
-                else
-                    print_error "Conflict occurred while reverting $c!"
-                    echo "Please resolve conflicts, then run:"
-                    echo "  git revert --continue"
-                    break
-                fi
-            done
-        else
-            print_status "Revert cancelled."
-        fi
-        ;;
-
-    " Git graph")
-        color=${YELLOW}
-        line1="Git graph"
-        line2="[INFO] press 'q' to exit"
-
-        echo -e "${color}╭$(printf '─%.0s' $(seq 1 30))╮${NC}"
-        printf "${color}│${NC} %-*s ${color}│${NC}\n" 28 "$line1"
-        printf "${color}│${NC} %-*s ${color}│${NC}\n" 28 "$line2"
-        echo -e "${color}╰$(printf '─%.0s' $(seq 1 30))╯${NC}"
-
-        # Use gum spin while loading the graph.
-        # Since git log can be long, we pipe it to less if it's too big,
-        # but gum spin doesn't work well with interactive pagers.
-        # However, for a simple "pretty log", we can just run it.
-        gum spin --title "Drawing git graph..." -- sleep 2
-        pretty_git_log
-        ;;
-
-    *)
-        print_error "Invalid choice! Try again."
-        echo "Git Wizard vanishes in a puff of smoke..."
-        break
-        ;;
-    esac
-
+    if gum confirm "Are you sure you want to exit?"; then
+      echo "Git Wizard vanishes in a puff of smoke..."
+      exit 0
+    else
+      continue
+    fi
+    ;;
+  " Merge branches")
+    current_branch=$(get_current_branch)
+    print_status "You are on branch: $current_branch"
     echo
-    gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
-    read -r </dev/tty
+
+    # Pick branch to merge from
+    merge_branch=$(git branch --format='%(refname:short)' |
+      grep -v "^$current_branch$" |
+      gum filter --placeholder "Select branch to merge into $current_branch")
+
+    if [[ -z "$merge_branch" ]]; then
+      print_warning "No branch selected. Merge cancelled."
+    else
+      if gum confirm "Merge branch '$merge_branch' into '$current_branch'?"; then
+        echo "Merging branch '$merge_branch' into '$current_branch'..."
+        print_command "git merge \"$merge_branch\""
+        if gum spin --title "Merging..." -- git merge "$merge_branch"; then
+          print_status "Merge successful!"
+        else
+          print_error "Merge had conflicts! Resolve them manually."
+        fi
+      else
+        print_status "Merge cancelled."
+      fi
+    fi
+    ;;
+  " Contributor Statistics")
+    show_contributor_stats
+    ;;
+
+  "󰓗 Summon the Architect (.gitignore)")
+    summon_gitignore
+    ;;
+
+  "󰔪 Summon the Resurrection Stone (Recover lost code)")
+    resurrect_commit
+    ;;
+
+  "󰁯 Revert commit(s)")
+    print_status "Fetching commit history..."
+    echo
+
+    # Show commits as "<hash> <message>" but keep hash separately
+    commits=$(git log --oneline --decorate |
+      gum filter --no-limit --placeholder "Select commit(s) to revert" |
+      awk '{print $1}')
+
+    if [[ -z "$commits" ]]; then
+      print_warning "No commit selected. Revert cancelled."
+      continue
+    fi
+
+    echo "You selected:"
+    echo "$commits"
+    echo
+
+    if gum confirm "Confirm revert?"; then
+      for c in $commits; do
+        echo "Reverting commit $c..."
+        print_command "git revert --no-edit $c"
+        if git revert --no-edit "$c"; then
+          print_status "Commit $c reverted."
+        else
+          print_error "Conflict occurred while reverting $c!"
+          echo "Please resolve conflicts, then run:"
+          echo "  git revert --continue"
+          break
+        fi
+      done
+    else
+      print_status "Revert cancelled."
+    fi
+    ;;
+
+  " Git graph")
+    color=${YELLOW}
+    line1="Git graph"
+    line2="[INFO] press 'q' to exit"
+
+    echo -e "${color}╭$(printf '─%.0s' $(seq 1 30))╮${NC}"
+    printf "${color}│${NC} %-*s ${color}│${NC}\n" 28 "$line1"
+    printf "${color}│${NC} %-*s ${color}│${NC}\n" 28 "$line2"
+    echo -e "${color}╰$(printf '─%.0s' $(seq 1 30))╯${NC}"
+
+    # Use gum spin while loading the graph.
+    # Since git log can be long, we pipe it to less if it's too big,
+    # but gum spin doesn't work well with interactive pagers.
+    # However, for a simple "pretty log", we can just run it.
+    gum spin --title "Drawing git graph..." -- sleep 2
+    pretty_git_log
+    ;;
+
+  *)
+    print_error "Invalid choice! Try again."
+    echo "Git Wizard vanishes in a puff of smoke..."
+    break
+    ;;
+  esac
+
+  echo
+  gum style --foreground "$BIMAGIC_MUTED" "Press Enter to continue..."
+  read -r </dev/tty
 done
