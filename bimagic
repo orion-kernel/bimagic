@@ -973,6 +973,27 @@ resurrect_commit() {
     esac
 }
 
+scrying_glass() {
+  print_status "󰈈 Summoning the Scrying Glass..."
+
+  # 1. Select the file using your existing filter style
+  local file=$(git ls-files --cached --others --exclude-standard |
+    gum filter --placeholder "Select a file to peer into...")
+
+  if [[ -z "$file" ]]; then
+    print_status "The glass goes dark (Cancelled)."
+    return 0
+  fi
+
+  # 2. Check for syntax highlighting capability
+  print_status "Peering into: $file"
+  if command -v bat &>/dev/null; then
+    bat --color=always "$file" | gum pager
+  else
+    gum pager <"$file"
+  fi
+}
+
 show_welcome_banner() {
     clear
     echo -e "$(get_ansi_esc "$BANNER_COLOR_1")▗▖   ▄ ▄▄▄▄   ▗▄▖  ▗▄▄▖▄  ▗▄▄▖\033[0m"
@@ -1032,6 +1053,7 @@ while true; do
             "󰔪 Summon the Resurrection Stone (Recover lost code)" \
             "󰁯 Revert commit(s)" \
             "󰓗 Stash operations" \
+            "󰈈 The Scrying Glass (Quick View)" \
             "󰿅 Exit"
     )
     echo
@@ -1185,34 +1207,49 @@ while true; do
         fi
         ;;
     " Add files")
-        # Show untracked + modified files, plus an [ALL] option
-        files=$( (
-            echo "[ALL]"
-            git ls-files --others --modified --exclude-standard
-        ) | gum filter --no-limit --placeholder "Select files to add")
+        while true; do
+            add_choice=$(gum choose "Stage Files" "Preview Files" "Back")
 
-        if [[ -z "$files" ]]; then
-            print_warning "No files selected."
-        else
-            # gum filter returns selected items separated by newlines.
-            # We need to handle the case where [ALL] is selected along with other files.
-            if echo "$files" | grep -q "\[ALL\]"; then
-                print_command "git add ."
-                git add .
-                print_status "All files staged."
-            else
-                # Correctly handle filenames with spaces by reading line by line
-                echo "$files" | while read -r f; do
-                    if [[ -n "$f" ]]; then
-                        print_command "git add \"$f\""
-                        git add "$f"
-                    fi
-                done
-                print_status "Selected files staged."
-                # Optionally, list the files that were staged
-                echo "$files"
+            if [[ "$add_choice" == "Back" ]]; then
+                break
             fi
-        fi
+
+            if [[ "$add_choice" == "Preview Files" ]]; then
+                scrying_glass
+                continue
+            fi
+
+            # Stage Files logic
+            # Show untracked + modified files, plus an [ALL] option
+            files=$( (
+                echo "[ALL]"
+                git ls-files --others --modified --exclude-standard
+            ) | gum filter --no-limit --placeholder "Select files to add")
+
+            if [[ -z "$files" ]]; then
+                print_warning "No files selected."
+            else
+                # gum filter returns selected items separated by newlines.
+                # We need to handle the case where [ALL] is selected along with other files.
+                if echo "$files" | grep -q "\[ALL\]"; then
+                    print_command "git add ."
+                    git add .
+                    print_status "All files staged."
+                else
+                    # Correctly handle filenames with spaces by reading line by line
+                    echo "$files" | while read -r f; do
+                        if [[ -n "$f" ]]; then
+                            print_command "git add \"$f\""
+                            git add "$f"
+                        fi
+                    done
+                    print_status "Selected files staged."
+                    # Optionally, list the files that were staged
+                    echo "$files"
+                fi
+            fi
+            break
+        done
         ;;
     " Commit changes")
         commit_mode=$(gum choose "󰦥 Magic Commit (Builder)" "󱐋 Quick Commit (One-line)")
@@ -1364,42 +1401,57 @@ while true; do
         git status
         ;;
     "󰮘 Remove files/folders (rm)")
-        # List tracked + untracked files for removal
-        files=$(git ls-files --cached --others --exclude-standard |
-            gum filter --no-limit --placeholder "Select files/folders to remove")
+        while true; do
+            remove_choice=$(gum choose "Remove Files" "Preview Files" "Back")
 
-        if [[ -z "$files" ]]; then
-            print_warning "No files selected."
-            continue # Use continue to go back to the main menu
-        fi
+            if [[ "$remove_choice" == "Back" ]]; then
+                break
+            fi
 
-        echo "Files selected for removal:"
-        # Use 'tput' for better visual separation and color
-        tput setaf 3
-        echo "$files"
-        tput sgr0
-        echo
+            if [[ "$remove_choice" == "Preview Files" ]]; then
+                scrying_glass
+                continue
+            fi
 
-        if gum confirm "Confirm removal? This cannot be undone."; then
-            # Use a 'while read' loop to correctly handle filenames with spaces
-            echo "$files" | while read -r f; do
-                if [[ -z "$f" ]]; then continue; fi # Skip empty lines
+            # Remove Files logic
+            # List tracked + untracked files for removal
+            files=$(git ls-files --cached --others --exclude-standard |
+                gum filter --no-limit --placeholder "Select files/folders to remove")
 
-                # Check if the file is tracked by git
-                if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
-                    # It's a tracked file, use 'git rm'
-                    print_command "git rm -rf \"$f\""
-                    git rm -rf "$f"
-                else
-                    # It's an untracked file, use 'rm'
-                    print_command "rm -rf \"$f\""
-                    rm -rf "$f"
-                fi
-            done
-            print_status "Selected files/folders have been removed."
-        else
-            print_status "Operation cancelled."
-        fi
+            if [[ -z "$files" ]]; then
+                print_warning "No files selected."
+                break
+            fi
+
+            echo "Files selected for removal:"
+            # Use 'tput' for better visual separation and color
+            tput setaf 3
+            echo "$files"
+            tput sgr0
+            echo
+
+            if gum confirm "Confirm removal? This cannot be undone."; then
+                # Use a 'while read' loop to correctly handle filenames with spaces
+                echo "$files" | while read -r f; do
+                    if [[ -z "$f" ]]; then continue; fi # Skip empty lines
+
+                    # Check if the file is tracked by git
+                    if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+                        # It's a tracked file, use 'git rm'
+                        print_command "git rm -rf \"$f\""
+                        git rm -rf "$f"
+                    else
+                        # It's an untracked file, use 'rm'
+                        print_command "rm -rf \"$f\""
+                        rm -rf "$f"
+                    fi
+                done
+                print_status "Selected files/folders have been removed."
+            else
+                print_status "Operation cancelled."
+            fi
+            break
+        done
         ;;
     " Uninitialize repo")
         print_warning "This will completely uninitialize the Git repository in this folder."
@@ -1418,7 +1470,10 @@ while true; do
             print_status "Operation cancelled."
         fi
         ;;
-    "󰿅 Exit")
+    "󰈈 The Scrying Glass (Quick View)")
+    scrying_glass
+    ;;
+  "󰿅 Exit")
         if gum confirm "Are you sure you want to exit?"; then
             echo "Git Wizard vanishes in a puff of smoke..."
             exit 0
